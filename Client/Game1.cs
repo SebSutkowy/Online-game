@@ -68,7 +68,7 @@ public class Game1 : Game
         _client.PollEvents();
         if(Keyboard.GetState().IsKeyDown(Keys.Space))
         {
-            SendMessage("Hey there"!);
+            SendMessage("Hey there!");
         }
 
         base.Update(gameTime);
