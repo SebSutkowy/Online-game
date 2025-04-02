@@ -16,7 +16,7 @@ public class Game1 : Game
     private NetManager _client;
     private NetPeer _server;
 
-    private string message = "N/A";
+    private string _message = "N/A";
 
     private SpriteFont _font;
 
@@ -38,7 +38,7 @@ public class Game1 : Game
 
         _listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod, channel) =>
         {
-            message = dataReader.GetString(100);
+            _message = dataReader.GetString(100);
             dataReader.Recycle();
         };
 
@@ -81,7 +81,7 @@ public class Game1 : Game
         // TODO: Add your drawing code here
         _spriteBatch.Begin();
 
-        _spriteBatch.DrawString(_font, message, new Vector2(50, 50), Color.White);
+        _spriteBatch.DrawString(_font, _message, new Vector2(50, 50), Color.White);
 
         _spriteBatch.End();
 
