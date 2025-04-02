@@ -54,6 +54,13 @@ public class Game1 : Game
         _font = Content.Load<SpriteFont>("Text");
     }
 
+    private void SendMessage(string message)
+    {
+        NetDataWriter writer = new NetDataWriter();
+        writer.Put(message);
+        _server.Send(writer, DeliveryMethod.ReliableOrdered);
+    }
+
     protected override void Update(GameTime gameTime)
     {
         // TODO: Add your update logic here
@@ -61,9 +68,7 @@ public class Game1 : Game
         _client.PollEvents();
         if(Keyboard.GetState().IsKeyDown(Keys.Space))
         {
-            NetDataWriter writer = new NetDataWriter();
-            writer.Put("Hey there!");
-            _server.Send(writer, DeliveryMethod.ReliableOrdered);
+            SendMessage("Hey there"!);
         }
 
         base.Update(gameTime);
