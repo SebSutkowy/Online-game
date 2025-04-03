@@ -34,11 +34,11 @@ public class Game1 : Game
         _listener = new EventBasedNetListener();
         _client = new NetManager(_listener);
         _client.Start();
-        _server = _client.Connect("localhost" /* ip */, 9050 /* port */, "gameKey" /* key */);
+        _server = _client.Connect("localhost" /* ip */, 9050 /* port */, "gameKey" /* key */); 
 
         _listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod, channel) =>
         {
-            _message = dataReader.GetString(100);
+            _message = dataReader.GetString(100); // gets the message from the server
             dataReader.Recycle();
         };
 
@@ -51,11 +51,12 @@ public class Game1 : Game
 
         // TODO: use this.Content to load your game content here
 
-        _font = Content.Load<SpriteFont>("Text");
+        _font = Content.Load<SpriteFont>("Text"); // for displaying text **temporary**
     }
 
     private void SendMessage(string message)
     {
+        // message to server
         NetDataWriter writer = new NetDataWriter();
         writer.Put(message);
         _server.Send(writer, DeliveryMethod.ReliableOrdered);
