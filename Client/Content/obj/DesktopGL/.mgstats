@@ -1,2 +1,3 @@
 Source File,Dest File,Processor Type,Content Type,Source File Size,Dest File Size,Build Seconds
-"C:/Users/GGBes/source/repos/Solution1/Client/Content/Text.spritefont","C:/Users/GGBes/source/repos/Solution1/Client/Content/bin/DesktopGL/Text.xnb","FontDescriptionProcessor","SpriteFontContent",2068,21535,0.4066029
+"C:/Users/GGBes/source/repos/Solution1/Client/Content/pixel.png","C:/Users/GGBes/source/repos/Solution1/Client/Content/bin/DesktopGL/pixel.xnb","TextureProcessor","Texture2DContent",119,89,0.0810362
+"C:/Users/GGBes/source/repos/Solution1/Client/Content/Text.spritefont","C:/Users/GGBes/source/repos/Solution1/Client/Content/bin/DesktopGL/Text.xnb","FontDescriptionProcessor","SpriteFontContent",2068,21535,0.2775561

@@ -4,6 +4,8 @@ using Microsoft.Xna.Framework.Input;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using System.Diagnostics;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Client;
 
@@ -16,9 +18,15 @@ public class Game1 : Game
     private NetManager _client;
     private NetPeer _server;
 
-    private string _message = "N/A";
+    private int clientNum;
+
+
+    private string _message;
 
     private SpriteFont _font;
+
+    private Player _player;
+    private Dictionary<int, Player> _playerList = new Dictionary<int, Player>(); // the other players
 
     public Game1()
     {
@@ -30,7 +38,14 @@ public class Game1 : Game
     protected override void Initialize()
     {
         // TODO: Add your initialization logic here
+        /* --- Screen --- */
+        _graphics.IsFullScreen = false;
+        _graphics.PreferredBackBufferHeight = 1049;
+        _graphics.PreferredBackBufferWidth = 1049;
+        _graphics.ApplyChanges();
 
+
+        /* --- Server --- */
         _listener = new EventBasedNetListener();
         _client = new NetManager(_listener);
         _client.Start();
@@ -38,9 +53,11 @@ public class Game1 : Game
 
         _listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod, channel) =>
         {
-            _message = dataReader.GetString(100); // gets the message from the server
+            _message = dataReader.GetString(100 /* max length */ ); // gets the message from the server
+            DecodeServerMessage(_message);
             dataReader.Recycle();
         };
+
 
         base.Initialize();
     }
@@ -52,25 +69,67 @@ public class Game1 : Game
         // TODO: use this.Content to load your game content here
 
         _font = Content.Load<SpriteFont>("Text"); // for displaying text **temporary**
+        Globals.PixelTexture = Content.Load<Texture2D>("pixel");
+
+        /* --- player --- */
+        _player = new Player(Vector2.Zero, 50, 50, 5);
     }
 
-    private void SendMessage(string message)
+    private void SendMessage(string message, NetPeer peer=null)
     {
         // message to server
+        if ((_server == null && peer == null) || message == null)
+            return;
+
         NetDataWriter writer = new NetDataWriter();
         writer.Put(message);
-        _server.Send(writer, DeliveryMethod.ReliableOrdered);
+        if (peer != null)
+            peer.Send(writer, DeliveryMethod.ReliableOrdered);
+        else if (_server != null)
+            _server.Send(writer, DeliveryMethod.ReliableOrdered);
     }
 
+    private void DecodeServerMessage(string serverMessage)
+    {
+        Debug.WriteLine(serverMessage);
+        string[] message = serverMessage.Split(' ');
+        switch(message[0])
+        {
+            case "0": // 0 <id>
+                clientNum = int.Parse(message[1]);
+                break;
+            case "1": // 1 <id> <posX> <posY> <velX*100> <velY*100>
+                if (_playerList.ContainsKey(int.Parse(message[1])))
+                    _playerList[int.Parse(message[1])].ReadString(serverMessage);
+                else
+                    _playerList.Add(int.Parse(message[1]), new Player(Vector2.Zero, 50, 50, serverMessage, 5));
+                    break;
+            case "2": // 2 <id>
+                if (_playerList.ContainsKey(int.Parse(message[1])))
+                    _playerList.Remove(int.Parse(message[1]));
+                break;
+        }
+    }
+    
     protected override void Update(GameTime gameTime)
     {
         // TODO: Add your update logic here
 
         _client.PollEvents();
-        if(Keyboard.GetState().IsKeyDown(Keys.Space))
+
+        // removes itself from the list of players
+        _playerList.Remove(clientNum);
+
+        InputManager.GetInput();
+        _player.Move();
+        foreach(var (num, player) in _playerList)
         {
-            SendMessage("Hey there!");
+            Debug.WriteLine($"{num} {player.GetString()}");
+            player.MoveOnline();
         }
+        //Debug.WriteLine(_player.GetString)
+
+        SendMessage($"1 {clientNum} {_player.GetString()}");
 
         base.Update(gameTime);
     }
@@ -82,7 +141,11 @@ public class Game1 : Game
         // TODO: Add your drawing code here
         _spriteBatch.Begin();
 
-        _spriteBatch.DrawString(_font, _message, new Vector2(50, 50), Color.White);
+        //_spriteBatch.DrawString(_font, _message, new Vector2(50, 50), Color.White);
+        _player.Draw(_spriteBatch);
+
+        foreach (var (num, player) in _playerList)
+            player.Draw(_spriteBatch);
 
         _spriteBatch.End();
 
