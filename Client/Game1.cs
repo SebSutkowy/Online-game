@@ -49,7 +49,11 @@ public class Game1 : Game
         _listener = new EventBasedNetListener();
         _client = new NetManager(_listener);
         _client.Start();
-        _server = _client.Connect("localhost" /* ip */, 9050 /* port */, "gameKey" /* key */); 
+        _server = _client.Connect("localhost" /* ip */, 9050 /* port */, "gameKey" /* key */);
+        /* Localhost / 127.0.0.1 - this pc
+         * Private Ipv4 - LAN
+         * Public IP - across networks (ensure port forwarding is on for port 9050)
+         */
 
         _listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod, channel) =>
         {
@@ -98,7 +102,7 @@ public class Game1 : Game
             case "0": // 0 <id>
                 clientNum = int.Parse(message[1]);
                 break;
-            case "1": // 1 <id> <posX> <posY> <velX*100> <velY*100>
+            case "1": // 1 <id> <posX> <posY> <velX> <velY>
                 if (_playerList.ContainsKey(int.Parse(message[1])))
                     _playerList[int.Parse(message[1])].ReadString(serverMessage);
                 else
@@ -141,7 +145,7 @@ public class Game1 : Game
         // TODO: Add your drawing code here
         _spriteBatch.Begin();
 
-        //_spriteBatch.DrawString(_font, _message, new Vector2(50, 50), Color.White);
+        _spriteBatch.DrawString(_font, $"{_playerList.Count+1}", new Vector2(950, 50), Color.White);
         _player.Draw(_spriteBatch);
 
         foreach (var (num, player) in _playerList)

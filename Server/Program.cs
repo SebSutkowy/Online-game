@@ -12,15 +12,15 @@ class Player
 
     public string GetString()
     {
-        return $"{(int)Position.X} {(int)Position.Y} {(int)(Velocity.X*100)} {(int)(Velocity.Y*100)}";
+        return $"{Position.X} {Position.Y} {Velocity.X} {Velocity.Y}";
     }
 
     public void ReadString(string info)
     {
         // ignore first and second number (opcode and player id)
-        int[] values = Array.ConvertAll(info.Split(' '), int.Parse);
+        float[] values = Array.ConvertAll(info.Split(' '), float.Parse);
         Position = new Vector2(values[2], values[3]);
-        Velocity = new Vector2((float)values[4] / 100, (float)values[5] / 100);
+        Velocity = new Vector2(values[4], values[5]);
     }
 
     public Vector2 Position { get; set; }
@@ -29,7 +29,7 @@ class Player
 
 /* Opcodes                          | Sample
  * 0 - new player receive id        | 0 <id>
- * 1 - passing player info          | 1 <id> <posX> <posY> <velX*100> <velY*100>
+ * 1 - passing player info          | 1 <id> <posX> <posY> <velX> <velY>
  * 2 - player leaving               | 2 <id>
  */
 
@@ -103,7 +103,7 @@ class Program
             string message = dataReader.GetString(100 /* max length of the string */ );
             Console.WriteLine($"Received Data from Client {GetNum(fromPeer)}: {message}");
             List<string> nums = message.Split(' ').ToList<string>();
-            switch(nums[0]) // sample string for position and velocity message: 1 2 100 100 353 353, <opcode> <id> <posX> <posY> <velX * 100> <velY * 100>
+            switch(nums[0]) 
             {
                 case "1":
                     playerList[fromPeer].ReadString(message);

@@ -45,15 +45,15 @@ namespace Client
 
         public string GetString()
         {
-            return $"{(int)Position.X} {(int)Position.Y} {(int)(Velocity.X * 100)} {(int)(Velocity.Y * 100)}";
+            return $"{Position.X} {Position.Y} {Velocity.X} {Velocity.Y}";
         }
 
         public void ReadString(string info)
         {
             // ignore first and second number (opcode and player id)
-            int[] values = Array.ConvertAll(info.Split(' '), int.Parse);
+            float[] values = Array.ConvertAll(info.Split(' '), float.Parse);
             Position = new Vector2(values[2], values[3]);
-            Velocity = new Vector2((float)values[4] / 100, (float)values[5] / 100);
+            Velocity = new Vector2(values[4], values[5]);
         }
     }
 }
