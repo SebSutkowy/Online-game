@@ -29,7 +29,7 @@ class Player
 
 /* Opcodes                          | Sample
  * 0 - new player receive id        | 0 <id>
- * 1 - passing player info          | 1 <id> <posX> <posY> <velX> <velY>
+ * 1 - passing player info          | 1 <id> <posX> <posY> <dir> <vel>
  * 2 - player leaving               | 2 <id>
  */
 
@@ -67,6 +67,7 @@ class Program
     static void Main(string[] args)
     {
         int n;
+        int maxConnections = 10;
 
         EventBasedNetListener listener = new EventBasedNetListener();
         NetManager server = new NetManager(listener);
@@ -78,7 +79,7 @@ class Program
 
         listener.ConnectionRequestEvent += request =>
         {
-            if (server.ConnectedPeersCount < 10)
+            if (server.ConnectedPeersCount < maxConnections)
                 request.AcceptIfKey("gameKey");
             else
                 request.Reject();
@@ -105,7 +106,7 @@ class Program
             List<string> nums = message.Split(' ').ToList<string>();
             switch(nums[0]) 
             {
-                case "1":
+                case "1": /* Position Update */
                     playerList[fromPeer].ReadString(message);
                     SendGlobalMessage($"1 {nums[1]} {playerList[fromPeer].GetString()}", fromPeer);
                     break;

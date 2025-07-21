@@ -1,0 +1,12 @@
+
+
+--- Movement Logic ---
+Player will take a certain number of frames to move up a tile
+if player is moving and an input in the opposite direction is provided, the player stops on its original tile facing in the direciton of the input
+
+Moving down
+previous position = (0, 0)
+
+position.y = 0 + 2 * 1 * 50 / 10 = 10
+1
+

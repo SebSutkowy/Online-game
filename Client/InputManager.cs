@@ -6,19 +6,19 @@ namespace Client
 {
     static class InputManager
     {
-        public static Vector2 Direction = new Vector2(0, 0);
+        public static Direction MovementDirection = Direction.None;
         
         public static void GetInput()
         {
-            Direction = Vector2.Zero;
+            MovementDirection = Direction.None;
             if(Keyboard.GetState().IsKeyDown(Keys.A) || Keyboard.GetState().IsKeyDown(Keys.Left))
-                Direction.X += -1;
+                MovementDirection = Direction.Left;
             if (Keyboard.GetState().IsKeyDown(Keys.D) || Keyboard.GetState().IsKeyDown(Keys.Right))
-                Direction.X += 1;
+                MovementDirection = Direction.Right;
             if (Keyboard.GetState().IsKeyDown(Keys.W) || Keyboard.GetState().IsKeyDown(Keys.Up))
-                Direction.Y += -1;
+                MovementDirection = Direction.Up;
             if (Keyboard.GetState().IsKeyDown(Keys.S) || Keyboard.GetState().IsKeyDown(Keys.Down))
-                Direction.Y += 1;
+                MovementDirection = Direction.Down;
             //Debug.WriteLine($"Direction: {Direction}");
         }
     }

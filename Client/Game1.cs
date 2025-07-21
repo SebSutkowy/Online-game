@@ -40,8 +40,8 @@ public class Game1 : Game
         // TODO: Add your initialization logic here
         /* --- Screen --- */
         _graphics.IsFullScreen = false;
-        _graphics.PreferredBackBufferHeight = 1049;
-        _graphics.PreferredBackBufferWidth = 1049;
+        _graphics.PreferredBackBufferHeight = 1000;
+        _graphics.PreferredBackBufferWidth = 1000;
         _graphics.ApplyChanges();
 
 
@@ -76,7 +76,10 @@ public class Game1 : Game
         Globals.PixelTexture = Content.Load<Texture2D>("pixel");
 
         /* --- player --- */
-        _player = new Player(Vector2.Zero, 50, 50, 5);
+        int _playerSizeX = 50;
+        int _playerSizeY = 50;
+        int _playerFramesToMove = 10;
+        _player = new Player(Vector2.Zero, _playerSizeX, _playerSizeY, _playerFramesToMove);
     }
 
     private void SendMessage(string message, NetPeer peer=null)
@@ -111,6 +114,7 @@ public class Game1 : Game
             case "2": // 2 <id>
                 if (_playerList.ContainsKey(int.Parse(message[1])))
                     _playerList.Remove(int.Parse(message[1]));
+
                 break;
         }
     }
@@ -129,9 +133,9 @@ public class Game1 : Game
         foreach(var (num, player) in _playerList)
         {
             Debug.WriteLine($"{num} {player.GetString()}");
-            player.MoveOnline();
+            player.Move();
         }
-        //Debug.WriteLine(_player.GetString)
+        Debug.WriteLine(_player.GetString());
 
         SendMessage($"1 {clientNum} {_player.GetString()}");
 
@@ -145,7 +149,8 @@ public class Game1 : Game
         // TODO: Add your drawing code here
         _spriteBatch.Begin();
 
-        _spriteBatch.DrawString(_font, $"{_playerList.Count+1}", new Vector2(950, 50), Color.White);
+        int _textPositionX = 950, _textPositionY = 50;
+        _spriteBatch.DrawString(_font, $"{_playerList.Count+1}", new Vector2(_textPositionX, _textPositionY), Color.White);
         _player.Draw(_spriteBatch);
 
         foreach (var (num, player) in _playerList)
