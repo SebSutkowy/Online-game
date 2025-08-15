@@ -20,6 +20,10 @@ public class Game1 : Game
 
     private int clientNum;
 
+    private int _playerSizeX,
+                _playerSizeY,
+                _speed,
+                _maxHealth;
 
     private string _message;
 
@@ -76,10 +80,11 @@ public class Game1 : Game
         Globals.PixelTexture = Content.Load<Texture2D>("pixel");
 
         /* --- player --- */
-        int _playerSizeX = 50;
-        int _playerSizeY = 50;
-        int _playerFramesToMove = 10;
-        _player = new Player(Vector2.Zero, _playerSizeX, _playerSizeY, _playerFramesToMove);
+        _playerSizeX = 100;
+        _playerSizeY = 100;
+        _speed = 10;
+        _maxHealth = 100;
+        _player = new Player(Vector2.Zero, _maxHealth, _playerSizeX, _playerSizeY, _speed);
     }
 
     private void SendMessage(string message, NetPeer peer=null)
@@ -109,8 +114,11 @@ public class Game1 : Game
                 if (_playerList.ContainsKey(int.Parse(message[1])))
                     _playerList[int.Parse(message[1])].ReadString(serverMessage);
                 else
-                    _playerList.Add(int.Parse(message[1]), new Player(Vector2.Zero, 50, 50, serverMessage, 5));
-                    break;
+                {
+                    _playerList.Add(int.Parse(message[1]), new Player(Vector2.Zero, _maxHealth, _playerSizeX, _playerSizeY, serverMessage, _speed));
+                    _playerList[int.Parse(message[1])].Online = true;
+                }
+                break;
             case "2": // 2 <id>
                 if (_playerList.ContainsKey(int.Parse(message[1])))
                     _playerList.Remove(int.Parse(message[1]));

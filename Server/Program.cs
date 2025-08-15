@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using System.Security.Cryptography;
 using System.Threading.Tasks.Dataflow;
 using LiteNetLib;
 using LiteNetLib.Utils;
@@ -64,10 +65,12 @@ class Program
         }
     }
 
-    static void Main(string[] args)
+    static void StartServer()
     {
         int n;
         int maxConnections = 10;
+        while(!runningServer)
+        { }    
 
         EventBasedNetListener listener = new EventBasedNetListener();
         NetManager server = new NetManager(listener);
@@ -75,7 +78,7 @@ class Program
         Console.WriteLine("===Server===");
 
         server.Start(9050); // Port
-        Console.WriteLine("Started on port 9050");
+        Console.WriteLine("[SERVER] Started on port 9050");
 
         listener.ConnectionRequestEvent += request =>
         {
@@ -88,8 +91,8 @@ class Program
         listener.PeerConnectedEvent += peer =>
         {
             n = 0;
-            Console.WriteLine($"Connection at {peer}");
-            while(clientNames.ContainsKey(n))
+            Console.WriteLine($"[SERVER] Connection at {peer}");
+            while (clientNames.ContainsKey(n))
             {
                 n++;
             }
@@ -102,35 +105,70 @@ class Program
         listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod, channel) =>
         {
             string message = dataReader.GetString(100 /* max length of the string */ );
-            Console.WriteLine($"Received Data from Client {GetNum(fromPeer)}: {message}");
+            Console.WriteLine($"[SERVER] Received Data from Client {GetNum(fromPeer)}: {message}");
             List<string> nums = message.Split(' ').ToList<string>();
-            switch(nums[0]) 
+            switch (nums[0])
             {
                 case "1": /* Position Update */
                     playerList[fromPeer].ReadString(message);
                     SendGlobalMessage($"1 {nums[1]} {playerList[fromPeer].GetString()}", fromPeer);
                     break;
             }
-            
+
             dataReader.Recycle();
         };
 
         listener.PeerDisconnectedEvent += (peer, disconnectInfo) =>
         {
-            Console.WriteLine($"Client {GetNum(peer)} Disconnected: {disconnectInfo}");
+            Console.WriteLine($"[SERVER] Client {GetNum(peer)} Disconnected: {disconnectInfo}");
             SendGlobalMessage($"2 {GetNum(peer)}", peer);
             clientNames.Remove(GetNum(peer));
             playerList.Remove(peer);
         };
 
-        
-
-        while (!Console.KeyAvailable)
+        while (runningServer)
         {
             server.PollEvents();
-            
             Thread.Sleep(15);
         }
         server.Stop();
+        Console.WriteLine("[CMD] Server Stopped");
+    }
+
+    static bool HandlingInputs = true;
+    static bool runningServer = false;
+
+    static void Main(string[] args)
+    {
+        Thread inputThread = new Thread(HandleCommands);
+        inputThread.Start();
+        Thread serverThread = new Thread(StartServer);
+        serverThread.Start();
+    }
+
+    static void HandleCommands()
+    {
+        while(HandlingInputs)
+        {
+            if (!Console.KeyAvailable)
+                continue;
+            string? command = Console.ReadLine();
+
+            if (string.IsNullOrEmpty(command))
+                continue;
+            Console.WriteLine($"[CMD] You entered: {command}");
+
+            switch(command?.ToLower())
+            {
+                case "start":
+                    Console.WriteLine("[CMD] Starting Server...");
+                    runningServer = true;
+                    break;
+                case "stop":
+                    Console.WriteLine("[CMD] Stopping Server...");
+                    runningServer = false;
+                    break;
+            }
+        }
     }
 }

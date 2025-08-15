@@ -8,7 +8,7 @@ namespace Client
 {
     static class Tilemap
     {
-        public static int TileSize = 50;
+        public static int TileSize = 100;
 
     }
 }
