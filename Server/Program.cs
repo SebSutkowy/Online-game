@@ -6,8 +6,12 @@ namespace Server;
 
 class Program
 {
+    private const float SERVER_TICK_RATE = 30.0f;
+    private const float minTimeBetweenTicks = 1f / SERVER_TICK_RATE;
+
     public static void StartServer()
     {
+        string key = "gameKey";
         int port = 9050;
         int maxConnections = 10;
         int maxStringLength = 100;
@@ -18,19 +22,19 @@ class Program
         Console.WriteLine("===Server===");
 
         server.Start(port);
-        Console.WriteLine($"Started on port {port}");
+        Console.WriteLine($"[SERVER] Started on port {port}");
 
         listener.ConnectionRequestEvent += request =>
         {
             if (server.ConnectedPeersCount < maxConnections)
-                request.AcceptIfKey("gameKey");
+                request.AcceptIfKey(key);
             else
                 request.Reject();
         };
 
         listener.PeerConnectedEvent += peer =>
         {
-            Console.WriteLine($"Connection at {peer}");
+            Console.WriteLine($"[SERVER] Connection at {peer}");
             NetDataWriter writer = new NetDataWriter();
             writer.Put("Hello Client");
             peer.Send(writer, DeliveryMethod.ReliableOrdered);
@@ -38,16 +42,22 @@ class Program
 
         listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod, channel) =>
         {
-            Console.WriteLine($"Received Data from {fromPeer.Address}: {dataReader.GetString(maxStringLength)}");
+            string message = dataReader.GetString(maxStringLength);
+            Console.WriteLine($"[SERVER] Received Data from {fromPeer.Address}: {message}");
             dataReader.Recycle();
         };
 
         while(!Console.KeyAvailable)
         {
             server.PollEvents();
-
+            Thread.Sleep((int) minTimeBetweenTicks*1000);
         }
         server.Stop();
+    }
+
+    public void DecodeMessage(string message)
+    {
+
     }
 
     static void Main(string[] args)

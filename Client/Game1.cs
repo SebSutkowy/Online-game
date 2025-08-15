@@ -14,13 +14,20 @@ public class Game1 : Game
 
     private EventBasedNetListener _listener;
     private NetManager _client;
-    private NetPeer _server;
+    private NetPeer? _server;
 
     private string _message = "N/A";
 
-    private float timeForTick;
+    private float timer;
+    private int currentTick = 0;
+
+    private float minTimeBetweenTicks;
     private const float SERVER_TICK_RATE = 30.0f;
-    
+    private const int BUFFER_SIZE = 1024;
+
+    private const string ip = "localhost";
+    private const int port = 9050;
+    private const string key = "gameKey";
 
     private SpriteFont _font;
 
@@ -31,17 +38,19 @@ public class Game1 : Game
         IsMouseVisible = true;
     }
 
+    private NetPeer ConnectToServer(NetManager client, string ip, int port, string key) => client.Connect(ip, port, key); 
+
     protected override void Initialize()
     {
         // TODO: Add your initialization logic here
 
-        string ip = "localhost";
-        int port = 9050;
-        string key = "gameKey";
+        minTimeBetweenTicks = 1f / SERVER_TICK_RATE;
+
+        
         _listener = new EventBasedNetListener();
         _client = new NetManager(_listener);
         _client.Start();
-        _server = _client.Connect(ip, port, key); 
+        _server = ConnectToServer(_client, ip, port, key); 
 
         _listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod, channel) =>
         {
@@ -50,8 +59,6 @@ public class Game1 : Game
             DecodeMessage(_message);
             dataReader.Recycle();
         };
-
-        timeForTick = 1f / SERVER_TICK_RATE;
 
         base.Initialize();
     }
@@ -72,20 +79,65 @@ public class Game1 : Game
         writer.Put(message);
         _server.Send(writer, DeliveryMethod.ReliableOrdered);
     }
+    
+    private void SendInputPayload(InputPayload inputPayload)
+    {
+        NetDataWriter writer = new NetDataWriter();
+        writer.Put($"2 {inputPayload.Tick} {inputPayload.Input.X} {inputPayload.Input.Y}");
+        _server.Send(writer, DeliveryMethod.ReliableOrdered);
+    }
 
     private void DecodeMessage(string message)
     {
         
     }
 
+    private void CheckServerConnection()
+    {
+        switch (_server.ConnectionState)
+        {
+            case ConnectionState.Outgoing:
+                _message = "Connecting to server...";
+                break;
+            case ConnectionState.Disconnected:
+                _message = "Failed to connect to server";
+                if (InputManager.IsInputPresent(Input.RefreshServer))
+                    _server = ConnectToServer(_client, ip, port, key);
+                break;
+            default:
+                _message = "Connected to server";
+                break;
+        }
+    }
+
     protected override void Update(GameTime gameTime)
     {
         // TODO: Add your update logic here
+        InputManager.Update();
 
         _client.PollEvents();
+        CheckServerConnection();
 
+        timer += (float) gameTime.ElapsedGameTime.TotalSeconds;
+        while(timer >= minTimeBetweenTicks)
+        {
+            timer -= minTimeBetweenTicks;
+            HandleTick();
+            currentTick++;
+        }
 
         base.Update(gameTime);
+    }
+
+    public void HandleTick()
+    {
+        int bufferIndex = currentTick % BUFFER_SIZE;
+        InputPayload input = new InputPayload
+        {
+            Tick = currentTick,
+            Input = InputManager.InputDirection
+        };
+
     }
 
     protected override void Draw(GameTime gameTime)
