@@ -31,7 +31,7 @@ namespace Client
 
         public static bool OnPress(Keys key) => (currentKeyboardState.IsKeyDown(key) && !prevKeyboardState.IsKeyDown(key));
         public static bool OnHold(Keys key) => (currentKeyboardState.IsKeyDown(key));
-        public static bool IsInputPresent(Input input) => InputValues[input];
+        public static bool ReceivedInput(Input input) => InputValues[input];
 
 
         public static void Update()
@@ -46,13 +46,13 @@ namespace Client
                     InputValues[input] = OnPress(key);
             }
 
-            if (InputValues[Input.Left])
+            if (ReceivedInput(Input.Left))
                 InputDirection.X--;
-            if (InputValues[Input.Right])
+            if (ReceivedInput(Input.Right))
                 InputDirection.X++;
-            if (InputValues[Input.Up])
+            if (ReceivedInput(Input.Up))
                 InputDirection.Y--;
-            if (InputValues[Input.Down])
+            if (ReceivedInput(Input.Down))
                 InputDirection.Y++;
 
             if (InputDirection != Vector2.Zero)

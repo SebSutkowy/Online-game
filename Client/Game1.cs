@@ -14,12 +14,15 @@ public class Game1 : Game
 
     private EventBasedNetListener _listener;
     private NetManager _client;
-    private NetPeer? _server;
+    private NetPeer _server;
+
+    private int _clientId;
+    private PlayerManager _playerManager;
 
     private string _message = "N/A";
 
-    private float timer;
-    private int currentTick = 0;
+    private float _timer;
+    private int _currentTick = 0;
 
     private float minTimeBetweenTicks;
     private const float SERVER_TICK_RATE = 30.0f;
@@ -50,7 +53,7 @@ public class Game1 : Game
         _listener = new EventBasedNetListener();
         _client = new NetManager(_listener);
         _client.Start();
-        _server = ConnectToServer(_client, ip, port, key); 
+        _server = ConnectToServer(_client, ip, port, key);
 
         _listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod, channel) =>
         {
@@ -59,6 +62,8 @@ public class Game1 : Game
             DecodeMessage(_message);
             dataReader.Recycle();
         };
+
+        _playerManager = new PlayerManager();
 
         base.Initialize();
     }
@@ -83,14 +88,57 @@ public class Game1 : Game
     private void SendInputPayload(InputPayload inputPayload)
     {
         NetDataWriter writer = new NetDataWriter();
-        writer.Put($"2 {inputPayload.Tick} {inputPayload.Input.X} {inputPayload.Input.Y}");
+        writer.Put($"3 {_clientId} {inputPayload.Tick} {inputPayload.Input.X} {inputPayload.Input.Y}");
         _server.Send(writer, DeliveryMethod.ReliableOrdered);
     }
 
-    private void DecodeMessage(string message)
+    public void DecodeMessage(string message)
     {
-        
+        int playerId,
+            tick;
+        float X,
+              Y;
+        string[] code = message.Split(' ');
+        if (code.Length == 0)
+            return;
+        string opcode = code[0];
+        playerId = int.Parse(code[1]);
+        switch (opcode)
+        {
+            case "0": // On Join: 0 {id} {tick}
+                _clientId = playerId;
+                _currentTick = int.Parse(code[2]);
+                break;
+            case "1": // On Leave: 1 {id}
+                _playerManager.Remove(playerId);
+                break;
+            case "2": // Player state payload: 2 {id} {tick} {posX} {posY}
+                tick = int.Parse(code[2]);
+                X = float.Parse(code[3]);
+                Y = float.Parse(code[4]);
+                StatePayload state = CreateStatePayload(tick, X, Y);
+                _playerManager.UpdatePlayer(playerId, state);
+                break;
+            case "3": // Player Input payload: 3 {id} {tick} {dirX} {dirY}
+                tick = int.Parse(code[2]);
+                X = float.Parse(code[3]);
+                Y = float.Parse(code[4]);
+                CreateInputPayload(tick, X, Y);
+                break;
+        }        
     }
+
+    private StatePayload CreateStatePayload(int tick, float posX, float posY) => new StatePayload
+    {
+        Tick = tick,
+        Position = new Vector2(posX, posY)
+    };
+
+    private InputPayload CreateInputPayload(int tick, float dirX, float dirY) => new InputPayload
+    {
+        Tick = tick,
+        Input = new Vector2(dirX, dirY)
+    };
 
     private void CheckServerConnection()
     {
@@ -101,7 +149,7 @@ public class Game1 : Game
                 break;
             case ConnectionState.Disconnected:
                 _message = "Failed to connect to server";
-                if (InputManager.IsInputPresent(Input.RefreshServer))
+                if (InputManager.ReceivedInput(Input.RefreshServer))
                     _server = ConnectToServer(_client, ip, port, key);
                 break;
             default:
@@ -116,14 +164,15 @@ public class Game1 : Game
         InputManager.Update();
 
         _client.PollEvents();
+
         CheckServerConnection();
 
-        timer += (float) gameTime.ElapsedGameTime.TotalSeconds;
-        while(timer >= minTimeBetweenTicks)
+        _timer += (float) gameTime.ElapsedGameTime.TotalSeconds;
+        while(_timer >= minTimeBetweenTicks)
         {
-            timer -= minTimeBetweenTicks;
+            _timer -= minTimeBetweenTicks;
             HandleTick();
-            currentTick++;
+            _currentTick++;
         }
 
         base.Update(gameTime);
@@ -131,13 +180,14 @@ public class Game1 : Game
 
     public void HandleTick()
     {
-        int bufferIndex = currentTick % BUFFER_SIZE;
+        int bufferIndex = _currentTick % BUFFER_SIZE;
         InputPayload input = new InputPayload
         {
-            Tick = currentTick,
+            Tick = _currentTick,
             Input = InputManager.InputDirection
         };
-
+        if (input.Input != Vector2.Zero)
+            SendInputPayload(input);
     }
 
     protected override void Draw(GameTime gameTime)
