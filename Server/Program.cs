@@ -6,19 +6,23 @@ namespace Server;
 
 class Program
 {
-    static void Main(string[] args)
+    public static void StartServer()
     {
+        int port = 9050;
+        int maxConnections = 10;
+        int maxStringLength = 100;
+
         EventBasedNetListener listener = new EventBasedNetListener();
         NetManager server = new NetManager(listener);
 
         Console.WriteLine("===Server===");
 
-        server.Start(9050); // Port
-        Console.WriteLine("Started on port 9050");
+        server.Start(port);
+        Console.WriteLine($"Started on port {port}");
 
         listener.ConnectionRequestEvent += request =>
         {
-            if (server.ConnectedPeersCount < 10)
+            if (server.ConnectedPeersCount < maxConnections)
                 request.AcceptIfKey("gameKey");
             else
                 request.Reject();
@@ -34,15 +38,23 @@ class Program
 
         listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod, channel) =>
         {
-            Console.WriteLine($"Received Data from {fromPeer.Address}: {dataReader.GetString(100 /* max length of string */)}");
+            Console.WriteLine($"Received Data from {fromPeer.Address}: {dataReader.GetString(maxStringLength)}");
             dataReader.Recycle();
         };
 
-        while (!Console.KeyAvailable)
+        while(!Console.KeyAvailable)
         {
             server.PollEvents();
-            Thread.Sleep(15);
+
         }
         server.Stop();
+    }
+
+    static void Main(string[] args)
+    {
+        Thread serverThread = new Thread(StartServer);
+        serverThread.Start();
+
+        
     }
 }

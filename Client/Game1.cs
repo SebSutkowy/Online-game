@@ -18,6 +18,10 @@ public class Game1 : Game
 
     private string _message = "N/A";
 
+    private float timeForTick;
+    private const float SERVER_TICK_RATE = 30.0f;
+    
+
     private SpriteFont _font;
 
     public Game1()
@@ -31,16 +35,23 @@ public class Game1 : Game
     {
         // TODO: Add your initialization logic here
 
+        string ip = "localhost";
+        int port = 9050;
+        string key = "gameKey";
         _listener = new EventBasedNetListener();
         _client = new NetManager(_listener);
         _client.Start();
-        _server = _client.Connect("localhost" /* ip */, 9050 /* port */, "gameKey" /* key */); 
+        _server = _client.Connect(ip, port, key); 
 
         _listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod, channel) =>
         {
-            _message = dataReader.GetString(100); // gets the message from the server
+            int maxMessageLength = 100; // In characters
+            _message = dataReader.GetString(maxMessageLength); // gets the message from the server
+            DecodeMessage(_message);
             dataReader.Recycle();
         };
+
+        timeForTick = 1f / SERVER_TICK_RATE;
 
         base.Initialize();
     }
@@ -62,15 +73,17 @@ public class Game1 : Game
         _server.Send(writer, DeliveryMethod.ReliableOrdered);
     }
 
+    private void DecodeMessage(string message)
+    {
+        
+    }
+
     protected override void Update(GameTime gameTime)
     {
         // TODO: Add your update logic here
 
         _client.PollEvents();
-        if(Keyboard.GetState().IsKeyDown(Keys.Space))
-        {
-            SendMessage("Hey there!");
-        }
+
 
         base.Update(gameTime);
     }

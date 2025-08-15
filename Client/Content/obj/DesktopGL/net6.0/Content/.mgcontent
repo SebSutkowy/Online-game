@@ -4,7 +4,7 @@
   <Platform>DesktopGL</Platform>
   <Config />
   <SourceFiles>
-    <File>C:/Users/GGBes/source/repos/Solution1/Client/Content/Text.spritefont</File>
+    <File>C:/Users/GGBes/source/repos/Online Game/Client/Content/Text.spritefont</File>
   </SourceFiles>
   <DestFiles>
     <File xsi:nil="true" />
