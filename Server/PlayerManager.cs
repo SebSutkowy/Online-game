@@ -2,39 +2,46 @@
 
 namespace Server
 {
-    internal class PlayerManager
+    static class PlayerManager
     {
-        public Dictionary<int, Player> Players { get; set; }
+        public static Dictionary<int, Player> Players = new Dictionary<int, Player> ();
 
-        public PlayerManager()
-        {
-            Players = new Dictionary<int, Player>();
-        }
-
-        public void Remove(int id)
+        public static void Remove(int id)
         {
             Players.Remove(id);
         }
 
-        public void UpdatePlayer(int id, StatePayload statePayload)
+        public static void UpdatePlayer(int id, StatePayload statePayload)
         {
             if (!Players.ContainsKey(id))
                 Players.Add(id, new Player());
             Players[id].UpdatePlayer(statePayload);
         }
 
-        public void AddInput(int id,  InputPayload inputPayload)
+        public static void AddInput(int id,  InputPayload inputPayload)
         {
             if (!Players.ContainsKey(id))
                 return;
             Players[id].InputQueue.Enqueue(inputPayload);
         }
 
-        public void ProcessPlayerMovement(int id, InputPayload inputPayload)
+        public static void ProcessPlayerMovement()
         {
-            if (!Players.ContainsKey(id))
-                return;
-            Players[id].ProcessMovement(inputPayload);
+            foreach (var (playerId, player) in Players)
+            {
+                int bufferIndex = -1;
+                while(player.InputQueue.Count > 0)
+                {
+                    InputPayload input = player.InputQueue.Dequeue();
+
+                    bufferIndex = input.Tick;
+
+                    StatePayload state = player.ProcessMovement(input);
+                    player.StateBuffer[bufferIndex] = state;
+                }
+                if (bufferIndex != -1)
+                    Server.SendMessage(playerId, player.StateBuffer[bufferIndex].ToString(playerId));
+            }
         }
 
     }

@@ -15,11 +15,11 @@ namespace Client
 
     static class InputManager
     {
-        public static KeyboardState currentKeyboardState = new KeyboardState();
-        public static KeyboardState prevKeyboardState;
+        private static KeyboardState currentKeyboardState = new KeyboardState();
+        private static KeyboardState prevKeyboardState;
 
-        public static Vector2 InputDirection = Vector2.Zero;
-        public static Dictionary<Input, Keys> InputKeys = new Dictionary<Input, Keys>
+        private static Vector2 InputDirection = Vector2.Zero;
+        private static Dictionary<Input, Keys> InputKeys = new Dictionary<Input, Keys>
         {
             { Input.Up, Keys.W },
             { Input.Down, Keys.S },
@@ -27,7 +27,7 @@ namespace Client
             { Input.Right, Keys.D },
             { Input.RefreshServer, Keys.R }
         };
-        public static Dictionary<Input, bool> InputValues = new Dictionary<Input, bool>();
+        private static Dictionary<Input, bool> InputValues = new Dictionary<Input, bool>();
 
         public static bool OnPress(Keys key) => (currentKeyboardState.IsKeyDown(key) && !prevKeyboardState.IsKeyDown(key));
         public static bool OnHold(Keys key) => (currentKeyboardState.IsKeyDown(key));
@@ -58,6 +58,8 @@ namespace Client
             if (InputDirection != Vector2.Zero)
                 InputDirection.Normalize();
         }
+
+        public static Vector2 GetInput() => InputDirection;
 
     }
 }

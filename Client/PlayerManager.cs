@@ -1,26 +1,42 @@
-﻿using System.Collections.Generic;
+﻿using Microsoft.Xna.Framework.Graphics;
+using System.Collections.Generic;
 
 namespace Client
 {
-    internal class PlayerManager
+    static class PlayerManager
     {
-        public Dictionary<int, Player> Players { get; set; }
+        private static Dictionary<int, Player> Players = new Dictionary<int, Player>();
+        private static Texture2D BlankTexture { get; set; }
 
-        public PlayerManager()
+        public static void setBlankTexture(Texture2D blankTexture)
         {
-            Players = new Dictionary<int, Player>();
+            BlankTexture = blankTexture;
         }
 
-        public void Remove(int id)
+        public static void Remove(int id)
         {
             Players.Remove(id);
         }
 
-        public void UpdatePlayer(int id, StatePayload statePayload)
+        public static void UpdatePlayer(int Id, StatePayload statePayload)
         {
-            if (!Players.ContainsKey(id))
-                Players.Add(id, new Player());
-            Players[id].UpdatePlayer(statePayload);
+            if (!Players.ContainsKey(Id))
+                Players.Add(Id, new Player(BlankTexture));
+            Players[Id].UpdatePlayer(statePayload);
+        }
+
+        public static void AddInput(int Id, InputPayload Input)
+        {
+            int bufferIndex = Input.Tick % Server.BUFFER_SIZE;
+            Players[Id].InputBuffer[bufferIndex] = Input;
+        }
+        
+        public static void DrawPlayers(SpriteBatch spriteBatch)
+        {
+            foreach(Player player in Players.Values)
+            {
+                player.Draw(spriteBatch);
+            }
         }
 
     }
