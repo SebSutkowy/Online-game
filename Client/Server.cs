@@ -41,7 +41,8 @@ namespace Client
             {
                 int maxMessageLength = 100; // In characters
                 string message = dataReader.GetString(maxMessageLength); // gets the message from the server
-                Messages.Push(message);
+                if (Messages.Peek() != message)
+                    Messages.Push(message);
                 DecodeMessage(message);
                 dataReader.Recycle();
             };
@@ -143,19 +144,22 @@ namespace Client
 
         public static bool CheckServerConnection()
         {
+            string message;
             switch (server.ConnectionState)
             {
                 case ConnectionState.Outgoing:
-                    Messages.Push("Connecting to server...");
+                    message = "Connecting to server...";
                     break;
                 case ConnectionState.Disconnected:
-                    Messages.Push("Failed to connect to server");
+                    message = "Failed to connect to server";
                     if (InputManager.ReceivedInput(Input.RefreshServer))
                         server = ConnectToServer(client, IP, PORT, KEY);
                     break;
                 default:
                     return true;
             }
+            if (Messages.Peek() != message)
+                Messages.Push(message);
             return false;
         }
         #endregion
