@@ -18,6 +18,8 @@ namespace Client
         public Player(Texture2D texture)
         { 
             Texture = texture;
+            Position = Vector2.Zero;
+            UpdateHitbox();
         }
 
         public Player(Texture2D texture, Vector2 position, Vector2 size, int bufferSize)
@@ -34,6 +36,12 @@ namespace Client
             int bufferIndex = state.Tick % BUFFER_SIZE;
             StateBuffer[bufferIndex] = state;
             Position = state.Position;
+            UpdateHitbox();
+        }
+
+        private void UpdateHitbox()
+        {
+            Hitbox = new Rectangle((int)Position.X, (int)Position.Y, (int)Size.X, (int)Size.Y);
         }
 
         // USE PROCESS MOVEMENT LATER --> FOR CLIENT RECONCILIATION

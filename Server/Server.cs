@@ -41,6 +41,7 @@ namespace Server
                 NetDataWriter writer = new NetDataWriter();
                 int playerId = GetNextAvailableId();
                 ConnectedClients.Add(playerId, peer);
+                PlayerManager.CreatePlayer(playerId);
                 writer.Put($"0 {playerId} {currentTick}");
                 peer.Send(writer, DeliveryMethod.ReliableOrdered);
             };
@@ -122,6 +123,12 @@ namespace Server
         {
             PlayerManager.ProcessPlayerMovement();
         }
+
+        #endregion
+
+        #region Debugging
+
+        //public static void 
 
         #endregion
 

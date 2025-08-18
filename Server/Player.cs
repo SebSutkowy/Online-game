@@ -8,7 +8,7 @@ namespace Server
         private const int BUFFER_SIZE = 1024;
         public Vector2 Position = Vector2.Zero;
         public StatePayload[] StateBuffer = new StatePayload[BUFFER_SIZE];
-        public float Speed = 5f;
+        public float Speed = 300f;
         public Queue<InputPayload> InputQueue = new Queue<InputPayload>();
 
         public void UpdatePlayer(StatePayload state)
@@ -24,7 +24,7 @@ namespace Server
             StatePayload state = new StatePayload
             {
                 Tick = input.Tick,
-                Position = Vector2.Zero
+                Position = Position
             };
             return state;
         }

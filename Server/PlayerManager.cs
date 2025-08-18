@@ -4,11 +4,16 @@ namespace Server
 {
     static class PlayerManager
     {
-        public static Dictionary<int, Player> Players = new Dictionary<int, Player> ();
+        private static Dictionary<int, Player> Players = new Dictionary<int, Player>();
 
         public static void Remove(int id)
         {
             Players.Remove(id);
+        }
+
+        public static void CreatePlayer(int playerId)
+        {
+            Players.Add(playerId, new Player());
         }
 
         public static void UpdatePlayer(int id, StatePayload statePayload)
@@ -40,7 +45,10 @@ namespace Server
                     player.StateBuffer[bufferIndex] = state;
                 }
                 if (bufferIndex != -1)
-                    Server.SendMessage(playerId, player.StateBuffer[bufferIndex].ToString(playerId));
+                {
+                    string state = player.StateBuffer[bufferIndex].ToString(playerId);
+                    Server.SendGlobalMessage(state);
+                }
             }
         }
 
