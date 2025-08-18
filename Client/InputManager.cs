@@ -41,10 +41,12 @@ namespace Client
             foreach(var (input, key) in InputKeys)
             {
                 if(!InputValues.ContainsKey(input))
-                    InputValues.Add(input, OnPress(key));
+                    InputValues.Add(input, OnHold(key));
                 else
-                    InputValues[input] = OnPress(key);
+                    InputValues[input] = OnHold(key);
             }
+
+            InputDirection = Vector2.Zero;
 
             if (ReceivedInput(Input.Left))
                 InputDirection.X--;

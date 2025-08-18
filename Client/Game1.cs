@@ -64,6 +64,7 @@ public class Game1 : Game
         _spriteBatch.Begin();
 
         _spriteBatch.DrawString(_font, Server.GetMostRecentMessage(), new Vector2(50, 50), Color.White);
+        PlayerManager.DrawPlayers(_spriteBatch);
 
         _spriteBatch.End();
 

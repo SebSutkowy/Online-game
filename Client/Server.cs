@@ -4,6 +4,7 @@ using LiteNetLib.Utils;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace Client
 {
@@ -28,10 +29,12 @@ namespace Client
         private static NetPeer server;
 
         private static int ClientId;
-        private static Stack<string> Messages = new Stack<string>();
+        private static Stack<string?> Messages = new Stack<string?>();
 
         public static void Initialize()
         {
+            Messages.Push(null);
+
             listener = new EventBasedNetListener();
             client = new NetManager(listener);
             client.Start();
@@ -158,8 +161,8 @@ namespace Client
                 default:
                     return true;
             }
-            if (Messages.Peek() != message)
-                Messages.Push(message);
+            if (Messages?.Peek() != message)
+                Messages?.Push(message);
             return false;
         }
         #endregion
