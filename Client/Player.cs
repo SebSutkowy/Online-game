@@ -1,15 +1,15 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
+using System.Net.Sockets;
 
 namespace Client
 {
     internal class Player
     {
-        private const int BUFFER_SIZE = 1024;
-
         public Texture2D Texture { get; set; }
         public Vector2 Position { get; set; }
         public StatePayload[] StateBuffer = new StatePayload[Server.BUFFER_SIZE];
+        public StatePayload TargetState;
         public InputPayload[] InputBuffer = new InputPayload[Server.BUFFER_SIZE];
         public Vector2 Size { get; set; } = new Vector2(100, 100);
         public float Speed { get; set; } = 5f;
@@ -31,11 +31,23 @@ namespace Client
             Hitbox = new Rectangle((int)Position.X, (int)Position.Y, (int)Size.X, (int)Size.Y);
         }
 
-        public void UpdatePlayer(StatePayload state)
+        public void UpdatePlayer()
         {
-            int bufferIndex = state.Tick % BUFFER_SIZE;
+            if(TargetState != null)
+            {
+                //Vector2 delta = TargetState.Position - Position;
+
+                //Position = Position + delta * PlayerManager.GetLerpConstant();
+                Position = Vector2.Lerp(Position, TargetState.Position, PlayerManager.GetLerpConstant());
+            }
+            int tick = Server.GetTick();
+            StatePayload state = new StatePayload
+            {
+                Tick = tick,
+                Position = Position
+            };
+            int bufferIndex = tick % Server.BUFFER_SIZE;
             StateBuffer[bufferIndex] = state;
-            Position = state.Position;
             UpdateHitbox();
         }
 

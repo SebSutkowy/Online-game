@@ -5,15 +5,14 @@ namespace Server
 {
     class Player
     {
-        private const int BUFFER_SIZE = 1024;
         public Vector2 Position = Vector2.Zero;
-        public StatePayload[] StateBuffer = new StatePayload[BUFFER_SIZE];
+        public StatePayload[] StateBuffer = new StatePayload[Server.BUFFER_SIZE];
         public float Speed = 300f;
         public Queue<InputPayload> InputQueue = new Queue<InputPayload>();
 
         public void UpdatePlayer(StatePayload state)
         {
-            int bufferIndex = state.Tick % BUFFER_SIZE;
+            int bufferIndex = state.Tick % Server.BUFFER_SIZE;
             StateBuffer[bufferIndex] = state;
         }
 

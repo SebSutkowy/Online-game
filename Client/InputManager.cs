@@ -10,7 +10,15 @@ namespace Client
         Down,
         Left,
         Right,
-        RefreshServer
+        RefreshServer,
+        IncreaseLerpConstant,
+        DecreaseLerpConstant
+    }
+
+    class InputPair
+    {
+        public bool HeldInput;
+        public bool PressedInput;
     }
 
     static class InputManager
@@ -25,13 +33,16 @@ namespace Client
             { Input.Down, Keys.S },
             { Input.Left, Keys.A },
             { Input.Right, Keys.D },
-            { Input.RefreshServer, Keys.R }
+            { Input.RefreshServer, Keys.R },
+            { Input.IncreaseLerpConstant, Keys.Up },
+            { Input.DecreaseLerpConstant, Keys.Down }
         };
-        private static Dictionary<Input, bool> InputValues = new Dictionary<Input, bool>();
+        private static Dictionary<Input, InputPair> InputValues = new Dictionary<Input, InputPair>();
 
         public static bool OnPress(Keys key) => (currentKeyboardState.IsKeyDown(key) && !prevKeyboardState.IsKeyDown(key));
         public static bool OnHold(Keys key) => (currentKeyboardState.IsKeyDown(key));
-        public static bool ReceivedInput(Input input) => InputValues[input];
+        public static bool ReceivedPressedInput(Input input) => InputValues[input].PressedInput;
+        public static bool ReceivedHeldInput(Input input) => InputValues[input].HeldInput;
 
 
         public static void Update()
@@ -40,21 +51,26 @@ namespace Client
             currentKeyboardState = Keyboard.GetState();
             foreach(var (input, key) in InputKeys)
             {
-                if(!InputValues.ContainsKey(input))
-                    InputValues.Add(input, OnHold(key));
+                InputPair newPair = new InputPair
+                {
+                    HeldInput = OnHold(key),
+                    PressedInput = OnPress(key)
+                };
+                if (!InputValues.ContainsKey(input))
+                    InputValues.Add(input, newPair);
                 else
-                    InputValues[input] = OnHold(key);
+                    InputValues[input] = newPair;
             }
 
             InputDirection = Vector2.Zero;
 
-            if (ReceivedInput(Input.Left))
+            if (ReceivedHeldInput(Input.Left))
                 InputDirection.X--;
-            if (ReceivedInput(Input.Right))
+            if (ReceivedHeldInput(Input.Right))
                 InputDirection.X++;
-            if (ReceivedInput(Input.Up))
+            if (ReceivedHeldInput(Input.Up))
                 InputDirection.Y--;
-            if (ReceivedInput(Input.Down))
+            if (ReceivedHeldInput(Input.Down))
                 InputDirection.Y++;
 
             if (InputDirection != Vector2.Zero)

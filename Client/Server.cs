@@ -12,8 +12,8 @@ namespace Client
     {
         #region Server constants
         public const int BUFFER_SIZE = 1024;
-        public const float TICK_RATE = 30.0f;
-        public const float MIN_TIME_BETWEEN_TICKS = 1f / TICK_RATE;
+        public const float TICK_RATE = 5.0f;
+        public const float TIME_BETWEEN_TICKS = 1f / TICK_RATE;
         private static float Timer;
         private static int CurrentTick = 0;
         #endregion
@@ -30,6 +30,8 @@ namespace Client
 
         private static int ClientId;
         private static Stack<string?> Messages = new Stack<string?>();
+
+        private static float deltaTime;
 
         public static void Initialize()
         {
@@ -57,16 +59,20 @@ namespace Client
 
             bool Connection = Server.CheckServerConnection();
             if (Connection)
+            {
                 TickTimer(gameTime);
+                PlayerManager.Update();
+            }
         }
 
         #region Tick Handling
         private static void TickTimer(GameTime gameTime)
         {
-            Timer += (float)gameTime.ElapsedGameTime.TotalSeconds;
-            while (Timer >= MIN_TIME_BETWEEN_TICKS)
+            deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+            Timer += deltaTime;
+            while (Timer >= TIME_BETWEEN_TICKS)
             {
-                Timer -= MIN_TIME_BETWEEN_TICKS;
+                Timer -= TIME_BETWEEN_TICKS;
                 HandleTick();
                 CurrentTick++;
             }
@@ -83,6 +89,10 @@ namespace Client
             if (input.Input != Vector2.Zero)
                 SendMessage(input.ToString(ClientId));
         }
+
+        public static int GetTick() => CurrentTick;
+
+        public static float GetDeltaTime() => deltaTime;
         #endregion
 
         #region Messages
@@ -94,7 +104,7 @@ namespace Client
             server.Send(writer, DeliveryMethod.ReliableOrdered);
         }
 
-        public static string GetMostRecentMessage() => Messages.Peek();
+        public static string GetMostRecentMessage() => Messages.Peek() != null ? Messages.Peek() : "";
 
         public static void DecodeMessage(string message)
         {
@@ -112,6 +122,7 @@ namespace Client
                 case "0": // On Join: 0 {id} {tick}
                     ClientId = playerId;
                     CurrentTick = int.Parse(code[2]);
+                    PlayerManager.UpdatePlayer(playerId);
                     break;
                 case "1": // On Leave: 1 {id}
                     PlayerManager.Remove(playerId);
@@ -125,7 +136,7 @@ namespace Client
                         Tick = tick,
                         Position = new Vector2(X, Y)
                     };
-                    PlayerManager.UpdatePlayer(playerId, state);
+                    PlayerManager.SetTargetState(playerId, state);
                     break;
                 case "3": // Player Input payload: 3 {id} {tick} {dirX} {dirY}
                     tick = int.Parse(code[2]);
@@ -155,7 +166,7 @@ namespace Client
                     break;
                 case ConnectionState.Disconnected:
                     message = "Failed to connect to server";
-                    if (InputManager.ReceivedInput(Input.RefreshServer))
+                    if (InputManager.ReceivedPressedInput(Input.RefreshServer))
                         server = ConnectToServer(client, IP, PORT, KEY);
                     break;
                 default:

@@ -7,7 +7,8 @@ namespace Server
 {
     static class Server
     {
-        public const float TICK_RATE = 30.0f;
+        public const int BUFFER_SIZE = 1024;
+        public const float TICK_RATE = 5.0f;
         public const float minTimeBetweenTicks = 1f / TICK_RATE;
         public static int currentTick = 0;
 
@@ -58,7 +59,7 @@ namespace Server
                 Console.WriteLine($"[SERVER] {peer.Address} Disconnected from Server: {disconnectInfo.ToString()}");
                 int id = GetClientId(peer);
                 SendGlobalMessage($"1 {id}");
-                ConnectedClients.Remove(id);
+                RemoveId(id);
             };
 
             while (!Console.KeyAvailable)
@@ -108,6 +109,7 @@ namespace Server
             NetDataWriter writer = new NetDataWriter();
             writer.Put(message);
             client.Send(writer, DeliveryMethod.ReliableOrdered);
+            Console.WriteLine($"[SERVER] Sent message \"{message}\" to {client.Address}");
         }
 
         public static void SendMessage(int clientId, string message)
@@ -132,6 +134,11 @@ namespace Server
 
         #endregion
 
+        public static void RemoveId(int id)
+        {
+            ConnectedClients.Remove(id);
+            PlayerManager.Remove(id);
+        }
         public static void DecodeMessage(string message)
         {
             int playerId,

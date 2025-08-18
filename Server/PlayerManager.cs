@@ -39,7 +39,7 @@ namespace Server
                 {
                     InputPayload input = player.InputQueue.Dequeue();
 
-                    bufferIndex = input.Tick;
+                    bufferIndex = input.Tick % Server.BUFFER_SIZE;
 
                     StatePayload state = player.ProcessMovement(input);
                     player.StateBuffer[bufferIndex] = state;
