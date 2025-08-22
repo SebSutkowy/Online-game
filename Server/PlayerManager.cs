@@ -14,6 +14,8 @@ namespace Server
         public static void CreatePlayer(int playerId)
         {
             Players.Add(playerId, new Player());
+            string message = Message.CreatePlayerSpawnMessage(playerId, Server.GetTick(), Players[playerId].Position);
+            Server.SendGlobalMessage(message);
         }
 
         public static void UpdatePlayer(int id, StatePayload statePayload)
@@ -42,12 +44,9 @@ namespace Server
                     bufferIndex = input.Tick % Server.BUFFER_SIZE;
 
                     StatePayload state = player.ProcessMovement(input);
-                    player.StateBuffer[bufferIndex] = state;
-                }
-                if (bufferIndex != -1)
-                {
-                    string state = player.StateBuffer[bufferIndex].ToString(playerId);
-                    Server.SendGlobalMessage(state);
+                    player.UpdatePlayer(state);
+                    string message = Message.CreatePlayerStateMessage(playerId, state);
+                    Server.SendGlobalMessage(message);
                 }
             }
         }

@@ -14,11 +14,12 @@ namespace Server
         {
             int bufferIndex = state.Tick % Server.BUFFER_SIZE;
             StateBuffer[bufferIndex] = state;
+            Position = state.Position;
         }
 
         public StatePayload ProcessMovement(InputPayload input)
         {
-            Position += input.Input * Speed * Server.minTimeBetweenTicks;
+            Position += input.Input * Speed * Server.TIME_BETWEEN_TICKS;
 
             StatePayload state = new StatePayload
             {

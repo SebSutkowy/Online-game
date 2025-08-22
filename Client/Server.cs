@@ -1,76 +1,93 @@
-﻿
-using LiteNetLib;
+﻿using LiteNetLib;
 using LiteNetLib.Utils;
-using Microsoft.Xna.Framework.Input;
-using Microsoft.Xna.Framework;
 using System.Collections.Generic;
-using System.Reflection;
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework;
 
 namespace Client
 {
     static class Server
     {
-        #region Server constants
         public const int BUFFER_SIZE = 1024;
-        public const float TICK_RATE = 5.0f;
+        public const float TICK_RATE = 60.0f;
         public const float TIME_BETWEEN_TICKS = 1f / TICK_RATE;
+        private static int CurrentTick = 2;
+        public static bool IsRunning { get; private set; } = false;
+        private static bool IsStopped = false;
         private static float Timer;
-        private static int CurrentTick = 0;
-        #endregion
-
-        #region Server connection constants
-        private const string KEY = "gameKey";
-        private const string IP = "localhost";
-        private const int PORT = 9050;
-        #endregion
-
-        private static EventBasedNetListener listener;
-        private static NetManager client;
-        private static NetPeer server;
-
-        private static int ClientId;
-        private static Stack<string?> Messages = new Stack<string?>();
-
         private static float deltaTime;
 
-        public static void Initialize()
+        private const int MAX_CONNECTIONS = 10;
+        private const int MAX_STRING_LENGTH = 100;
+        private const string KEY = "gameKey";
+
+        private static EventBasedNetListener listener;
+        private static NetManager server;
+
+        public static Dictionary<int, NetPeer> ConnectedClients = new Dictionary<int, NetPeer>();
+        public static PlayerManager PlayerManager;
+
+        public static void StartServer(int port)
         {
-            Messages.Push(null);
+            IsRunning = true;
 
             listener = new EventBasedNetListener();
-            client = new NetManager(listener);
-            client.Start();
-            server = ConnectToServer(client, IP, PORT, KEY);
+            server = new NetManager(listener);
+
+            server.Start(port);
+            Write($"Started on port {port}");
+
+            listener.ConnectionRequestEvent += request =>
+            {
+                if (server.ConnectedPeersCount < MAX_CONNECTIONS)
+                    request.AcceptIfKey(KEY);
+                else
+                    request.Reject();
+            };
+
+            listener.PeerConnectedEvent += peer =>
+            {
+                Write($"Connection at {peer}");
+
+                int playerId = GetNextAvailableId();
+                ConnectedClients.Add(playerId, peer);
+                string message = Message.CreateSyncMessage(CurrentTick);
+                SendMessage(playerId, message);
+            };
 
             listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod, channel) =>
             {
-                int maxMessageLength = 100; // In characters
-                string message = dataReader.GetString(maxMessageLength); // gets the message from the server
-                if (Messages.Peek() != message)
-                    Messages.Push(message);
-                DecodeMessage(message);
+                string message = dataReader.GetString(MAX_STRING_LENGTH);
+                Message.Decode(PlayerManager, message);
                 dataReader.Recycle();
+            };
+
+            listener.PeerDisconnectedEvent += (peer, disconnectInfo) =>
+            {
+                Write($"{peer.Address} Disconnected from Server: {disconnectInfo.ToString()}");
+                int id = GetClientId(peer);
+                string message = Message.CreateClientDisconnectMessage(id);
+                SendGlobalMessage(message);
+                RemoveId(id);
             };
         }
 
         public static void Update(GameTime gameTime)
         {
-            client.PollEvents();
-
-            bool Connection = Server.CheckServerConnection();
-            if (Connection)
+            if (!IsRunning)
             {
-                TickTimer(gameTime);
-                PlayerManager.Update();
+                if(!IsStopped)
+                {
+                    server.Stop();
+                    IsStopped = true;
+                }
+                return;
             }
-        }
+            server.PollEvents();
 
-        #region Tick Handling
-        private static void TickTimer(GameTime gameTime)
-        {
             deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
             Timer += deltaTime;
-            while (Timer >= TIME_BETWEEN_TICKS)
+            while (Timer > TIME_BETWEEN_TICKS)
             {
                 Timer -= TIME_BETWEEN_TICKS;
                 HandleTick();
@@ -78,107 +95,107 @@ namespace Client
             }
         }
 
+        public static void Write(string message)
+        {
+            Console.WriteLine($"[SERVER - {CurrentTick}t] {message}");
+        }
+
+        #region Client
+        public static int GetNextAvailableId()
+        {
+            int n = 0;
+            while (n < MAX_CONNECTIONS && ConnectedClients.ContainsKey(n))
+                n++;
+            if (!ConnectedClients.ContainsKey(n))
+                return n;
+
+            return -1;
+        }
+
+        public static int GetClientId(NetPeer client)
+        {
+            foreach (var (clientId, peer) in ConnectedClients)
+            {
+                if (peer == client)
+                    return clientId;
+            }
+            return -1;
+        }
+
+        public static void ClientJoin()
+        {
+
+        }
+        #endregion
+
+        #region Sending Messages
+        public static void SendGlobalMessage(string message)
+        {
+            foreach (var (id, client) in ConnectedClients)
+            {
+                SendMessage(client, message);
+            }
+        }
+
+        public static void SendMessage(NetPeer client, string message)
+        {
+            NetDataWriter writer = new NetDataWriter();
+            writer.Put(message);
+            client.Send(writer, DeliveryMethod.ReliableOrdered);
+            Write($"Sent message \"{message}\" to {client.Address}");
+        }
+
+        public static void SendMessage(int clientId, string message)
+        {
+            SendMessage(ConnectedClients[clientId], message);
+        }
+
+        #endregion
+
+        #region Handling Ticks
+
         private static void HandleTick()
         {
-            int bufferIndex = CurrentTick % BUFFER_SIZE;
-            InputPayload input = new InputPayload
+            if(CurrentTick % (TICK_RATE*5) == 0)
             {
-                Tick = CurrentTick,
-                Input = InputManager.GetInput()
-            };
-            if (input.Input != Vector2.Zero)
-                SendMessage(input.ToString(ClientId));
+                string message = Message.CreateSyncMessage(CurrentTick);
+                SendGlobalMessage(message);
+            }
+            PlayerManager.ProcessPlayerMovement(Mode.Server);
+        }
+
+        public static void SetTick(int tick)
+        {
+            CurrentTick = tick;
         }
 
         public static int GetTick() => CurrentTick;
 
-        public static float GetDeltaTime() => deltaTime;
         #endregion
 
-        #region Messages
-        public static void SendMessage(string message)
+        #region Debugging
+
+        public static void DrawPlayers(SpriteBatch spriteBatch)
         {
-            // message to server
-            NetDataWriter writer = new NetDataWriter();
-            writer.Put(message);
-            server.Send(writer, DeliveryMethod.ReliableOrdered);
+            PlayerManager.DrawPlayers(spriteBatch);
         }
 
-        public static string GetMostRecentMessage() => Messages.Peek() != null ? Messages.Peek() : "";
-
-        public static void DecodeMessage(string message)
+        public static void DisplayConsole(SpriteBatch spriteBatch)
         {
-            int playerId,
-                tick;
-            float X,
-                  Y;
-            string[] code = message.Split(' ');
-            if (code.Length == 0)
-                return;
-            string opcode = code[0];
-            playerId = int.Parse(code[1]);
-            switch (opcode)
-            {
-                case "0": // On Join: 0 {id} {tick}
-                    ClientId = playerId;
-                    CurrentTick = int.Parse(code[2]);
-                    PlayerManager.UpdatePlayer(playerId);
-                    break;
-                case "1": // On Leave: 1 {id}
-                    PlayerManager.Remove(playerId);
-                    break;
-                case "2": // Player state payload: 2 {id} {tick} {posX} {posY}
-                    tick = int.Parse(code[2]);
-                    X = float.Parse(code[3]);
-                    Y = float.Parse(code[4]);
-                    StatePayload state = new StatePayload
-                    {
-                        Tick = tick,
-                        Position = new Vector2(X, Y)
-                    };
-                    PlayerManager.SetTargetState(playerId, state);
-                    break;
-                case "3": // Player Input payload: 3 {id} {tick} {dirX} {dirY}
-                    tick = int.Parse(code[2]);
-                    X = float.Parse(code[3]);
-                    Y = float.Parse(code[4]);
-                    InputPayload input = new InputPayload
-                    {
-                        Tick = tick,
-                        Input = new Vector2(X, Y)
-                    };
-                    PlayerManager.AddInput(playerId, input);
-                    break;
-            }
+            Console.DisplayConsole(spriteBatch);
         }
+
         #endregion
 
-        #region Server Connection
-        public static NetPeer ConnectToServer(NetManager client, string ip, int port, string key) => client.Connect(ip, port, key);
-
-        public static bool CheckServerConnection()
+        public static void SetPlayerTexture(Texture2D Texture)
         {
-            string message;
-            switch (server.ConnectionState)
-            {
-                case ConnectionState.Outgoing:
-                    message = "Connecting to server...";
-                    break;
-                case ConnectionState.Disconnected:
-                    message = "Failed to connect to server";
-                    if (InputManager.ReceivedPressedInput(Input.RefreshServer))
-                        server = ConnectToServer(client, IP, PORT, KEY);
-                    break;
-                default:
-                    return true;
-            }
-            if (Messages?.Peek() != message)
-                Messages?.Push(message);
-            return false;
+            PlayerManager = new PlayerManager(Texture);
         }
-        #endregion
-
-        public static int GetClientId() => ClientId;
+        public static void RemoveId(int id)
+        {
+            ConnectedClients.Remove(id);
+            PlayerManager.Remove(id);
+        }
 
     }
 }

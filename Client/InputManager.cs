@@ -11,8 +11,15 @@ namespace Client
         Left,
         Right,
         RefreshServer,
+        SpawnPlayer,
         IncreaseLerpConstant,
-        DecreaseLerpConstant
+        DecreaseLerpConstant,
+        GetStates,
+        SwitchToServer,
+        SwitchToClient,
+        SwitchToNone,
+        SwitchToHybrid,
+        DisplayConsole
     }
 
     class InputPair
@@ -34,8 +41,15 @@ namespace Client
             { Input.Left, Keys.A },
             { Input.Right, Keys.D },
             { Input.RefreshServer, Keys.R },
+            { Input.SpawnPlayer, Keys.Space },
             { Input.IncreaseLerpConstant, Keys.Up },
-            { Input.DecreaseLerpConstant, Keys.Down }
+            { Input.DecreaseLerpConstant, Keys.Down },
+            { Input.GetStates, Keys.Q },
+            { Input.SwitchToServer, Keys.J },
+            { Input.SwitchToClient, Keys.K },
+            { Input.SwitchToNone, Keys.L },
+            { Input.SwitchToHybrid, Keys.H },
+            { Input.DisplayConsole, Keys.OemTilde }
         };
         private static Dictionary<Input, InputPair> InputValues = new Dictionary<Input, InputPair>();
 

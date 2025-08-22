@@ -7,7 +7,21 @@ namespace Client
         public int Tick;
         public Vector2 Position;
 
-        public string ToString(int id) => $"2 {id} {Tick} {Position.X} {Position.Y}";
+        public Payload ToPayload() => 
+            new Payload
+            {
+                Tick = Tick,
+                X = Position.X,
+                Y = Position.Y
+            };
+
+    }
+
+    class Payload
+    {
+        public int Tick { get; set; }
+        public float X { get; set; }
+        public float Y { get; set; }
 
     }
 
