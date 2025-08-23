@@ -51,7 +51,7 @@ namespace Client
 
                 int playerId = GetNextAvailableId();
                 ConnectedClients.Add(playerId, peer);
-                string message = Message.CreateSyncMessage(CurrentTick);
+                string message = Message.CreateClientJoinMessage(playerId, CurrentTick);
                 SendMessage(playerId, message);
             };
 
