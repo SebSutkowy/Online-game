@@ -53,6 +53,7 @@ namespace Client
                 ConnectedClients.Add(playerId, peer);
                 string message = Message.CreateClientJoinMessage(playerId, CurrentTick);
                 SendMessage(playerId, message);
+                PlayerManager.SendPlayerStates(playerId);
             };
 
             listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod, channel) =>

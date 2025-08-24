@@ -121,7 +121,21 @@ namespace Client
                 }
             }
         }
-        
+
+        public void SendPlayerStates(int recipientId)
+        {
+            foreach (var (playerId, player) in Players)
+            {
+                StatePayload state = new StatePayload
+                {
+                    Tick = Server.GetTick(),
+                    Position = player.Position
+                };
+                string message = Message.CreatePlayerStateMessage(playerId, state);
+                Server.SendMessage(recipientId, message);
+            }
+        }
+
         public void DrawPlayers(SpriteBatch spriteBatch)
         {
             foreach(Player player in Players.Values)
