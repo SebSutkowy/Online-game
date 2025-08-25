@@ -37,6 +37,7 @@ static class Message
         {
             case MessageType.Sync:
                 Client.SetTick(int.Parse(splitMessage[1]));
+                Client.Write($"Received tick update to {int.Parse(splitMessage[1])}");
                 break;
             case MessageType.ClientJoin:
                 id = int.Parse(splitMessage[1]);

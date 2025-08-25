@@ -136,11 +136,11 @@ namespace Client
             }
         }
 
-        public void DrawPlayers(SpriteBatch spriteBatch)
+        public void DrawPlayers()
         {
             foreach(Player player in Players.Values)
             {
-                player.Draw(spriteBatch);
+                Camera.ToDraw += () => player.Draw();
             }
         }
 

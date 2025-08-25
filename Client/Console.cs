@@ -4,12 +4,25 @@ using Microsoft.Xna.Framework;
 
 namespace Client
 {
+    public class ConsoleMessage
+    {
+        public string Message;
+        public ConsoleMessage? NextMessage;
+        public int MessageIndex;
+    }
+
     public static class Console
     {
-        private static List<string> Messages = new List<string>();
+        private static ConsoleMessage FirstMessage;
+        private static ConsoleMessage LastMessage;
+    
         private static SpriteFont Font;
         private static int SCREEN_WIDTH;
         private static int SCREEN_HEIGHT;
+        private static int messageCount = 0;
+        private const int MAX_MESSAGE_COUNT = 10;
+
+        public static bool Display { get; private set; } = false;
 
         public static void Initialize(SpriteFont font, Point dimensions)
         {
@@ -18,21 +31,53 @@ namespace Client
             SCREEN_WIDTH = dimensions.X;
         }
 
-        public static void WriteLine(string message)
+        public static void ToggleVisibility()
         {
-            Messages.Add(message);
+            Display = !Display;
         }
 
-        public static void DisplayConsole(SpriteBatch spriteBatch)
+        public static void WriteLine(string message)
         {
-            int height = (int)Font.MeasureString(Messages[0]).Y;
-            int yPos;
-            for (int i = Messages.Count - 1; i >= 0; i--)
+            
+            messageCount++;
+            if (messageCount == 1)
             {
-                string message = Messages[i];
-                yPos = SCREEN_HEIGHT - (Messages.Count - i) * height; 
-                Vector2 Position = new Vector2(10, yPos);
-                spriteBatch.DrawString(Font, message, Position, Color.White);
+                FirstMessage = new ConsoleMessage()
+                {
+                    Message = message,
+                    NextMessage = null,
+                    MessageIndex = messageCount
+                };
+                LastMessage = FirstMessage;
+            }
+            else
+            {
+                LastMessage.NextMessage = new ConsoleMessage()
+                {
+                    Message = message,
+                    NextMessage = null,
+                    MessageIndex = messageCount
+                };
+                LastMessage = LastMessage.NextMessage;
+            }
+            if (LastMessage.MessageIndex - FirstMessage.MessageIndex > MAX_MESSAGE_COUNT)
+                FirstMessage = FirstMessage.NextMessage;
+        }
+
+        public static void DisplayConsole()
+        {
+            if (!Display)
+                return;
+            int height;
+            int yPos = 10;
+            ConsoleMessage currentMessage = FirstMessage;
+            while (currentMessage != null)
+            {
+                Vector2 position = new Vector2(10, yPos);
+                Camera.DrawString(Font, currentMessage.Message, position, Color.White);
+                height = (int)Font.MeasureString(currentMessage.Message).Y;
+                yPos += height;
+                currentMessage = currentMessage.NextMessage;
             }
         }
     }

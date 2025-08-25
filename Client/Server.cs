@@ -157,7 +157,7 @@ namespace Client
 
         private static void HandleTick()
         {
-            if(CurrentTick % (TICK_RATE*5) == 0)
+            if(CurrentTick % (TICK_RATE) == 0)
             {
                 string message = Message.CreateSyncMessage(CurrentTick);
                 SendGlobalMessage(message);
@@ -176,14 +176,14 @@ namespace Client
 
         #region Debugging
 
-        public static void DrawPlayers(SpriteBatch spriteBatch)
+        public static void DrawPlayers()
         {
-            PlayerManager.DrawPlayers(spriteBatch);
+            PlayerManager.DrawPlayers();
         }
 
-        public static void DisplayConsole(SpriteBatch spriteBatch)
+        public static void DisplayConsole()
         {
-            Console.DisplayConsole(spriteBatch);
+            Console.DisplayConsole();
         }
 
         #endregion

@@ -46,26 +46,12 @@ namespace Client
         {
             int tick = Client.GetTick();
 
-            int pastTick = tick - 2;
-            int pastBufferIndex = pastTick % Client.BUFFER_SIZE;
-            StatePayload pastState = StateBuffer[pastBufferIndex];
+            int bufferIndex = (tick - 5) % Client.BUFFER_SIZE;
+            StatePayload state = StateBuffer[bufferIndex];
 
-            int previousTick = tick - 1;
-            int previousBufferIndex = previousTick % Client.BUFFER_SIZE;
-            StatePayload previousState = StateBuffer[previousBufferIndex];   
-
-            if(pastState == null || previousState == null)
-            {
-                Position = LastPassedState.Position;
-                UpdateHitbox();
-                return;
-            }
-
-            if(pastState.Tick == pastTick && previousState.Tick == previousTick)
-            {
-                float value = Client.TimeSinceLastTick() / Client.TIME_BETWEEN_TICKS;
-                Position = Vector2.Lerp(pastState.Position, previousState.Position, value);
-            }
+            if (state != null && state.Tick == tick - 5)
+                Position = state.Position;
+            
 
 
             UpdateHitbox();
@@ -99,9 +85,9 @@ namespace Client
             }
         }
 
-        public void Draw(SpriteBatch spriteBatch)
+        public void Draw()
         {
-            spriteBatch.Draw(Texture, Hitbox, Color.White);
+            Camera.Draw(Texture, Hitbox, Color.White);
         }
     }
 }

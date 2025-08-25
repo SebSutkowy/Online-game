@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 
-namespace TilemapMaker
+namespace Client
 {
     public static class Camera
     {
@@ -54,6 +54,11 @@ namespace TilemapMaker
             newBounds.Width = (int)(translationFactor * bounds.Width);
             newBounds.Height = (int)(translationFactor * bounds.Height);
             spriteBatch.Draw(texture, newBounds, color);
+        }
+
+        public static void DrawString(SpriteFont font, string text, Vector2 position, Color color)
+        {
+            spriteBatch.DrawString(font, text, position, color);
         }
     }
 }

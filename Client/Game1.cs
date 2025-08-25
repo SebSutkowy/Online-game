@@ -80,12 +80,15 @@ public class Game1 : Game
         else if (InputManager.ReceivedPressedInput(Input.SwitchToServer))
         {
             NetworkMode = Mode.Server;
-            displayConsole = true;
+            if(!Console.Display)
+                Console.ToggleVisibility();
             Debug.WriteLine("Switched to Server");
         }
         else if (InputManager.ReceivedPressedInput(Input.SwitchToClient))
         {
             NetworkMode = Mode.Client;
+            if (Console.Display)
+                Console.ToggleVisibility();
             Debug.WriteLine("Switched to Client");
         }
     }
@@ -122,24 +125,23 @@ public class Game1 : Game
     {
         GraphicsDevice.Clear(Color.Black);
 
-        // TODO: Add your drawing code here
-        _spriteBatch.Begin();
-
+        // TODO: Add your drawing code 
         
         switch(NetworkMode)
         {
             case Mode.Client:
-                Client.PlayerManager.DrawPlayers(_spriteBatch);
-                _spriteBatch.DrawString(_font, Client.GetMostRecentMessage(), new Vector2(50, 50), Color.White);
-                if (InputManager.ReceivedPressedInput(Input.DisplayConsole))
-                    displayConsole = !displayConsole;
+                Client.PlayerManager.DrawPlayers();
+                break;
+            case Mode.Server:
+                Server.PlayerManager.DrawPlayers();
                 break;
         }
 
-        if (displayConsole)
-            Console.DisplayConsole(_spriteBatch);
+        if (InputManager.ReceivedPressedInput(Input.DisplayConsole))
+            Console.ToggleVisibility();
+        Camera.ToDraw += () => Console.DisplayConsole();
 
-        _spriteBatch.End();
+        Camera.Display(_spriteBatch);
 
         base.Draw(gameTime);
     }
