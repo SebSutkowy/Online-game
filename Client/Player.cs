@@ -10,11 +10,14 @@ namespace Client
     {
         public Texture2D Texture { get; set; }
         public Vector2 Position { get; set; }
+        public Vector2 Center => new Vector2(Position.X + Size.X / 2, Position.Y + Size.Y / 2);
         public StatePayload[] StateBuffer = new StatePayload[Client.BUFFER_SIZE];
         public StatePayload LastPassedState;
         public InputPayload[] InputBuffer = new InputPayload[Client.BUFFER_SIZE];
         public Vector2 Size { get; set; } = new Vector2(100, 100);
-        public float Speed { get; set; } = 100f;
+        public float Speed { get; set; } = 200f;
+        public int Health { get; set; } = 100;
+
         public Rectangle Hitbox { get; private set; }
 
         public Player(Texture2D texture)
@@ -67,6 +70,7 @@ namespace Client
         {
             if (networkMode == Mode.Server)
             {
+                
                 Position = Position + input.Input * Speed * Server.TIME_BETWEEN_TICKS;
                 return new StatePayload
                 {

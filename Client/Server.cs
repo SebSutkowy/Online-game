@@ -54,6 +54,11 @@ namespace Client
                 string message = Message.CreateClientJoinMessage(playerId, CurrentTick);
                 SendMessage(playerId, message);
                 PlayerManager.SendPlayerStates(playerId);
+                foreach (TilemapChange change in Tilemap.Changes)
+                {
+                    message = Message.CreateInteractionConfirmationMessage(playerId, change.Tick, change.Position, "1");
+                    SendMessage(playerId, message);
+                }
             };
 
             listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod, channel) =>

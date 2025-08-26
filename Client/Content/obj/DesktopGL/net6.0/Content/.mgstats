@@ -1,2 +1,7 @@
 Source File,Dest File,Processor Type,Content Type,Source File Size,Dest File Size,Build Seconds
-"C:/Users/GGBes/source/repos/Online Game/Client/Content/Text.spritefont","C:/Users/GGBes/source/repos/Online Game/Client/Content/bin/DesktopGL/Content/Text.xnb","FontDescriptionProcessor","SpriteFontContent",2068,21535,0.3565797
+"C:/Users/GGBes/source/repos/Online Game/Client/Content/ChestTile.png","C:/Users/GGBes/source/repos/Online Game/Client/Content/bin/DesktopGL/Content/ChestTile.xnb","TextureProcessor","Texture2DContent",201,40085,0.0759863
+"C:/Users/GGBes/source/repos/Online Game/Client/Content/Cursor.png","C:/Users/GGBes/source/repos/Online Game/Client/Content/bin/DesktopGL/Content/Cursor.xnb","TextureProcessor","Texture2DContent",268,1109,0.0977416
+"C:/Users/GGBes/source/repos/Online Game/Client/Content/FloorTile.png","C:/Users/GGBes/source/repos/Online Game/Client/Content/bin/DesktopGL/Content/FloorTile.xnb","TextureProcessor","Texture2DContent",169,40085,0.002431
+"C:/Users/GGBes/source/repos/Online Game/Client/Content/Text.spritefont","C:/Users/GGBes/source/repos/Online Game/Client/Content/bin/DesktopGL/Content/Text.xnb","FontDescriptionProcessor","SpriteFontContent",2070,21535,0.1311411
+"C:/Users/GGBes/source/repos/Online Game/Client/Content/TrapTile.png","C:/Users/GGBes/source/repos/Online Game/Client/Content/bin/DesktopGL/Content/TrapTile.xnb","TextureProcessor","Texture2DContent",763,40085,0.0026951
+"C:/Users/GGBes/source/repos/Online Game/Client/Content/WallTile.png","C:/Users/GGBes/source/repos/Online Game/Client/Content/bin/DesktopGL/Content/WallTile.xnb","TextureProcessor","Texture2DContent",172,40085,0.0040345

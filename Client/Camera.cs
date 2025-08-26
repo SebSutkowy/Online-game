@@ -1,20 +1,24 @@
 ﻿
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using System;
 
 namespace Client
 {
     public static class Camera
     {
-        public static Point Offset { get; private set; } = Point.Zero;
+        public const int WIDTH = 1000;
+        public const int HEIGHT = 1000;
 
+        public static Vector2 Offset { get; private set; } = Vector2.Zero;
         public static float Distance { get; private set; } = 1.0f;
         private static float translationFactor;
 
         public static Action ToDraw = null;
 
         private static SpriteBatch spriteBatch;
+        private static SpriteFont spriteFont;
 
         public static void Zoom(float amount)
         {
@@ -23,13 +27,32 @@ namespace Client
             Distance += amount;
         }
 
-
-        public static void Move(Point direction)
+        public static Point AccountForOffset(Point point)
         {
-            Point newDirection = new Point();
+            Point newPoint = new Point();
+            newPoint.X = (int) (point.X + Offset.X / Distance);
+            newPoint.Y =(int) (point.Y + Offset.Y / Distance);
+            return newPoint;
+        }
+        public static Vector2 AccountForOffset(Vector2 point)
+        {
+            Vector2 newPoint = new Vector2();
+            newPoint.X = point.X + Offset.X / Distance;
+            newPoint.Y = point.Y + Offset.Y / Distance;
+            return newPoint;
+        }
+
+        public static void Move(Vector2 direction)
+        {
+            Vector2 newDirection = new Vector2();
             newDirection.X = (int) (direction.X * Distance); 
             newDirection.Y = (int) (direction.Y * Distance);
-            Offset -= newDirection;
+            Offset += newDirection;
+        }
+
+        public static void AddFont(SpriteFont font)
+        {
+            spriteFont = font;
         }
 
         public static void Display(SpriteBatch _spriteBatch)
@@ -49,8 +72,8 @@ namespace Client
         {
             translationFactor = GetTranslationFactor();
             Rectangle newBounds = new Rectangle();
-            newBounds.X = (int)(translationFactor * (Offset.X + bounds.X));
-            newBounds.Y = (int)(translationFactor * (Offset.Y + bounds.Y));
+            newBounds.X = (int)(translationFactor * (bounds.X - Offset.X));
+            newBounds.Y = (int)(translationFactor * (bounds.Y - Offset.Y));
             newBounds.Width = (int)(translationFactor * bounds.Width);
             newBounds.Height = (int)(translationFactor * bounds.Height);
             spriteBatch.Draw(texture, newBounds, color);
@@ -59,6 +82,16 @@ namespace Client
         public static void DrawString(SpriteFont font, string text, Vector2 position, Color color)
         {
             spriteBatch.DrawString(font, text, position, color);
+        }
+
+        public static void DrawString(string text, Vector2 position, Color color)
+        {
+            spriteBatch.DrawString(spriteFont, text, position, color);
+        }
+        public static void DrawString(string text, Point position, Color color)
+        {
+            Vector2 vectorPosition = new Vector2(position.X, position.Y);
+            spriteBatch.DrawString(spriteFont, text, vectorPosition, color);
         }
     }
 }

@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
-using System.Diagnostics;
+﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+using System;
 
 
 namespace Client
@@ -22,6 +23,13 @@ namespace Client
         public TileType Type { get; set; }
     }
 
+    public class TilemapChange
+    {
+        public int PlayerId { get; set; }
+        public int Tick { get; set; }
+        public Point Position { get; set; }
+    }
+
     public static class Tilemap
     {
         public const int TILE_SIZE = 100;
@@ -38,6 +46,85 @@ namespace Client
         };
         private static Dictionary<Point, Tile> tilemap = new Dictionary<Point, Tile>();
         private static Dictionary<Point, Tile> InteractiveTilemap = new Dictionary<Point, Tile>();
+
+        private static List<TilemapChange> ChangesYetToHappen = new List<TilemapChange>();
+        public static List<TilemapChange> Changes { get; private set; } = new List<TilemapChange>();
+
+        public static void AddChanges(TilemapChange change, Mode networkMode)
+        {
+            switch (networkMode)
+            {
+                case Mode.Client:
+                    ChangesYetToHappen.Add(change);
+                    break;
+                case Mode.Server:
+                    if (InteractiveTilemap.ContainsKey(change.Position))
+                        InteractiveTilemap.Remove(change.Position);
+                    Changes.Add(change);
+                    string message = Message.CreateInteractionConfirmationMessage(change.PlayerId, change.Tick, change.Position, "1");
+                    Server.SendGlobalMessage(message);
+                    break;
+            }
+        }
+
+        public static void Update()
+        {
+            List<TilemapChange> changesToRemove = new List<TilemapChange>();
+            foreach (TilemapChange change in ChangesYetToHappen)
+            {
+                if (change.Tick <= Client.GetTick())
+                {
+                    if (InteractiveTilemap.ContainsKey(change.Position))
+                        InteractiveTilemap.Remove(change.Position);
+                    Changes.Add(change);
+                    changesToRemove.Add(change);
+                }
+            }
+            foreach (TilemapChange change in changesToRemove)
+            {
+                if (ChangesYetToHappen.Contains(change))
+                    ChangesYetToHappen.Remove(change);
+            }
+        }
+
+        public static Point GetTilemapPos(Vector2 pos)
+        {
+            Point tilemapPos = new Point();
+            float dx = pos.X, dy = pos.Y;
+            int tileSize = (int)(TILE_SIZE / Camera.Distance);
+            if (dx >= 0)
+                tilemapPos.X = (int)(dx / tileSize);
+            else if (dx < 0)
+                tilemapPos.X = (int)((dx - tileSize) / tileSize);
+            if (dy >= 0)
+                tilemapPos.Y = (int)(dy / tileSize);
+            else if (dy < 0)
+                tilemapPos.Y = (int)((dy - tileSize) / tileSize);
+
+            return tilemapPos;
+        }
+
+        public static Point GetTilemapPos(Point pos)
+        {
+            Point tilemapPos = new Point();
+            float dx = pos.X, dy = pos.Y;
+            int tileSize = (int)(TILE_SIZE / Camera.Distance);
+            if (dx >= 0)
+                tilemapPos.X = (int)(dx / tileSize);
+            else if (dx < 0)
+                tilemapPos.X = (int)((dx - tileSize) / tileSize);
+            if (dy >= 0)
+                tilemapPos.Y = (int)(dy / tileSize);
+            else if (dy < 0)
+                tilemapPos.Y = (int)((dy - tileSize) / tileSize);
+
+            return tilemapPos;
+        }
+
+        public static bool IsANeighbour(Point pos1, Point pos2) => Math.Abs(pos1.X - pos2.X) <= 1 && Math.Abs(pos1.Y - pos2.Y) <= 1;
+
+        public static Tile GetInteractiveTile(Point pos) => InteractiveTilemap.ContainsKey(pos) ? InteractiveTilemap[pos] : null;
+        public static Tile GetTile(Point pos) => tilemap.ContainsKey(pos) ? tilemap[pos] : null;
 
         public static void ImportTexture(TileType type, Texture2D texture)
         {
@@ -80,7 +167,7 @@ namespace Client
 
         public static void ImportFrom(string filePath)
         {
-
+            Deserialize(filePath);
         }
 
         public static void Serialize()
@@ -102,7 +189,7 @@ namespace Client
             File.WriteAllText("map.json", json);
         }
 
-        public static void Deserialize()
+        public static void Deserialize(string filePath)
         {
             JsonSerializerOptions options = new JsonSerializerOptions();
             options.Converters.Add(new TilemapConverter());
@@ -110,7 +197,7 @@ namespace Client
             options.Converters.Add(new TileConverter());
             TilemapData tilemapData = new TilemapData();
 
-            tilemapData = JsonSerializer.Deserialize<TilemapData>(File.ReadAllText("map.json"), options);
+            tilemapData = JsonSerializer.Deserialize<TilemapData>(File.ReadAllText(filePath), options);
             tilemap = tilemapData.Tilemap;
             InteractiveTilemap = tilemapData.InteractiveTilemap;
         }

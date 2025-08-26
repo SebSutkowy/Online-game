@@ -52,7 +52,7 @@ namespace Client
                 Debug.WriteLine("Here");
                 int maxMessageLength = 100; // In characters
                 string message = dataReader.GetString(maxMessageLength); // gets the message from the server
-                if (Messages.Peek() != message)
+                if (GetMostRecentMessage() != message)
                     Messages.Push(message);
                 Message.Decode(PlayerManager, message);
                 dataReader.Recycle();
@@ -70,10 +70,12 @@ namespace Client
                 if (InputManager.ReceivedPressedInput(Input.GetStates))
                     GetStates();
                 PlayerManager.Update();
+                Tilemap.Update();
             }
         }
 
         #region Client
+        public static int GetClientId() => ClientId;
 
         public static void OnClientJoin(int clientId, int tick)
         {
@@ -192,7 +194,6 @@ namespace Client
             PlayerManager = new PlayerManager(Texture);
         }
 
-        public static int GetClientId() => ClientId;
 
     }
 }

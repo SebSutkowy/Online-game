@@ -20,15 +20,15 @@ namespace Client
         private static int SCREEN_WIDTH;
         private static int SCREEN_HEIGHT;
         private static int messageCount = 0;
-        private const int MAX_MESSAGE_COUNT = 10;
+        private const int MAX_MESSAGE_COUNT = 50;
 
         public static bool Display { get; private set; } = false;
 
-        public static void Initialize(SpriteFont font, Point dimensions)
+        public static void Initialize(SpriteFont font)
         {
             Font = font;
-            SCREEN_HEIGHT = dimensions.Y;
-            SCREEN_WIDTH = dimensions.X;
+            SCREEN_HEIGHT = Camera.HEIGHT;
+            SCREEN_WIDTH = Camera.WIDTH;
         }
 
         public static void ToggleVisibility()

@@ -21,7 +21,7 @@ public class Game1 : Game
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
 
-    private Texture2D serverTexture, clientTexture;
+    private Texture2D serverTexture, clientTexture, cursorTexture;
 
     private SpriteFont _font;
     private Point _screenDimensions;
@@ -39,10 +39,10 @@ public class Game1 : Game
     protected override void Initialize()
     {
         // TODO: Add your initialization logic here
-        _screenDimensions = new Point(768, 512);
-        _graphics.PreferredBackBufferWidth = _screenDimensions.X;
-        _graphics.PreferredBackBufferHeight = _screenDimensions.Y;
+        _graphics.PreferredBackBufferWidth = Camera.WIDTH;
+        _graphics.PreferredBackBufferHeight = Camera.HEIGHT;
         _graphics.IsFullScreen = false;
+        IsMouseVisible = false;
         _graphics.ApplyChanges();
 
 
@@ -55,6 +55,12 @@ public class Game1 : Game
 
         // TODO: use this.Content to load your game content here
 
+        Tilemap.ImportTexture(TileType.Floor, Content.Load<Texture2D>("FloorTile"));
+        Tilemap.ImportTexture(TileType.Wall, Content.Load<Texture2D>("WallTile"));
+        Tilemap.ImportTexture(TileType.Trap, Content.Load<Texture2D>("TrapTile"));
+        Tilemap.ImportTexture(TileType.Chest, Content.Load<Texture2D>("ChestTile"));
+
+
         _font = Content.Load<SpriteFont>("Text");
         serverTexture = new Texture2D(GraphicsDevice, 1, 1);
         serverTexture.SetData(new[] { new Color(50, 230, 50, 128) });
@@ -62,10 +68,12 @@ public class Game1 : Game
         clientTexture = new Texture2D(GraphicsDevice, 1, 1);
         clientTexture.SetData(new[] { new Color(230, 32, 32, 128)});
 
+        cursorTexture = Content.Load<Texture2D>("cursor");
         Server.SetPlayerTexture(serverTexture);
         Client.SetPlayerTexture(clientTexture);
 
-        Console.Initialize(_font, _screenDimensions);
+        Console.Initialize(_font);
+        Camera.AddFont(_font);
     }
 
     public void ChangeNetworkMode()
@@ -83,6 +91,7 @@ public class Game1 : Game
             if(!Console.Display)
                 Console.ToggleVisibility();
             Debug.WriteLine("Switched to Server");
+            Tilemap.ImportFrom("Presets/SampleMap1.json");
         }
         else if (InputManager.ReceivedPressedInput(Input.SwitchToClient))
         {
@@ -90,6 +99,7 @@ public class Game1 : Game
             if (Console.Display)
                 Console.ToggleVisibility();
             Debug.WriteLine("Switched to Client");
+            Tilemap.ImportFrom("Presets/SampleMap1.json");
         }
     }
 
@@ -121,25 +131,38 @@ public class Game1 : Game
         base.Update(gameTime);
     }
 
+    public void DrawCursor()
+    {
+        Point pos = InputManager.GetMousePos();
+        pos.X -= cursorTexture.Width / 2;
+        pos.Y -= cursorTexture.Height / 2;
+        pos = Camera.AccountForOffset(pos);
+        Rectangle cursor = new Rectangle(pos.X, pos.Y, cursorTexture.Width, cursorTexture.Height);
+        Camera.Draw(cursorTexture, cursor, Color.White);
+    }
+
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.Black);
 
         // TODO: Add your drawing code 
+        Camera.ToDraw += () => Tilemap.Draw();
+
         
         switch(NetworkMode)
         {
             case Mode.Client:
-                Client.PlayerManager.DrawPlayers();
+                Camera.ToDraw += () => Client.PlayerManager.DrawPlayers();
                 break;
             case Mode.Server:
-                Server.PlayerManager.DrawPlayers();
+                Camera.ToDraw += () => Server.PlayerManager.DrawPlayers();
                 break;
         }
 
         if (InputManager.ReceivedPressedInput(Input.DisplayConsole))
             Console.ToggleVisibility();
         Camera.ToDraw += () => Console.DisplayConsole();
+        Camera.ToDraw += () => DrawCursor();
 
         Camera.Display(_spriteBatch);
 

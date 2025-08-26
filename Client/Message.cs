@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 
@@ -14,7 +15,9 @@ enum MessageType : ushort
     SpawnPlayer = 3,
     PlayerSpawnRequest = 4,
     PlayerState = 5,
-    PlayerInput = 6
+    PlayerInput = 6,
+    Interaction = 7,
+    InteractionConfirmation = 8
 }
 
 static class Message
@@ -33,6 +36,9 @@ static class Message
 
         int tick, id;
         float X, Y;
+        Point tilemapPos = new Point();
+        string seed;
+        TilemapChange Change;
         switch (type)
         {
             case MessageType.Sync:
@@ -82,6 +88,35 @@ static class Message
                 Server.Write($"Received an input of {tick} {X} {Y} from client {id}");
                 playerManager.AddInput(id, input);
                 break;
+            case MessageType.Interaction:
+                id = int.Parse(splitMessage[1]);
+                tick = int.Parse(splitMessage[2]);
+                tilemapPos.X = int.Parse(splitMessage[3]);
+                tilemapPos.Y = int.Parse(splitMessage[4]);
+                Change = new TilemapChange()
+                {
+                    PlayerId = id,
+                    Tick = tick,
+                    Position = tilemapPos
+                };
+                Tilemap.AddChanges(Change, Mode.Server);
+                Server.Write($"Received Interaction message position: {tilemapPos}");
+                break;
+            case MessageType.InteractionConfirmation:
+                id = int.Parse(splitMessage[1]);
+                tick = int.Parse(splitMessage[2]);
+                tilemapPos.X = int.Parse(splitMessage[3]);
+                tilemapPos.Y = int.Parse(splitMessage[4]);
+                seed = splitMessage[5];
+                Change = new TilemapChange()
+                {
+                    PlayerId = id,
+                    Tick = tick,
+                    Position = tilemapPos
+                };
+                Tilemap.AddChanges(Change, Mode.Client);
+                Client.Write($"Received Interaction confirmation position: {tilemapPos}");
+                break;
         }
     }
 
@@ -99,5 +134,7 @@ static class Message
 
     public static string CreatePlayerInputMessage(int id, InputPayload input) => $"{(ushort)MessageType.PlayerInput} {id} {input.Tick} {input.Input.X} {input.Input.Y}";
 
+    public static string CreateInteractionMessage(int id, int tick, Point tilemapPos) => $"{(ushort)MessageType.Interaction} {id} {tick} {tilemapPos.X} {tilemapPos.Y}";
+    public static string CreateInteractionConfirmationMessage(int id, int tick, Point tilemapPos, string seed) => $"{(ushort)MessageType.InteractionConfirmation} {id} {tick} {tilemapPos.X} {tilemapPos.Y} {seed}";
 
 }

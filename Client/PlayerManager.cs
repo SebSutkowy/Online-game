@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework.Graphics;
+﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -10,6 +11,8 @@ namespace Client
         private Dictionary<int, Player> Players;
         private Dictionary<int, Queue<InputPayload>> InputQueue;
         private Texture2D BlankTexture;
+        private bool ShowInteractText = false;
+        private int InteractTextOffset = 5;
 
         private float LerpConstant = 0.5f;
 
@@ -38,6 +41,48 @@ namespace Client
             Players[id].Update();
         }
 
+        public void UpdateLocalPlayer()
+        {
+            int id = Client.GetClientId();
+            if (!Players.ContainsKey(id))
+                return;
+
+            CameraFollow(id);
+
+            CheckForInteraction(id);
+        }
+
+        private void CameraFollow(int id)
+        {
+            Player player = Players[id];
+            Vector2 playerPos = player.Position - Camera.Offset;
+            Vector2 targetPos = new Vector2((Camera.WIDTH - player.Size.X) / 2, (Camera.HEIGHT - player.Size.Y) / 2);
+
+            Vector2 TranslationAmount = (playerPos - targetPos) / 30.0f;
+            Camera.Move(TranslationAmount);
+        }
+        private void CheckForInteraction(int id)
+        {
+            Player player = Players[id];
+            Point mousePos = Tilemap.GetTilemapPos(Camera.AccountForOffset(InputManager.GetMousePos()));
+            Debug.WriteLine($"mouse pos: {mousePos}");
+            Point playerPos = Tilemap.GetTilemapPos(player.Center);
+            Debug.WriteLine($"player pos: {playerPos}");
+            Debug.WriteLine("---");
+            Tile tile = Tilemap.GetInteractiveTile(mousePos);
+
+            ShowInteractText = false;
+            if (tile == null)
+                return;
+            if (tile.Type == TileType.Chest && Tilemap.IsANeighbour(playerPos, mousePos))
+                ShowInteractText = true;
+            if (ShowInteractText && InputManager.ReceivedPressedInput(Input.Interact))
+            {
+                string message = Message.CreateInteractionMessage(id, Client.GetTick(), mousePos);
+                Client.SendMessage(message);
+            }
+        }
+       
         public void CreatePlayer(int playerId)
         {
             Players.Add(playerId, new Player(BlankTexture));
@@ -60,6 +105,8 @@ namespace Client
             if (InputManager.ReceivedPressedInput(Input.DecreaseLerpConstant))
                 LerpConstant = Math.Max(LerpConstant - 0.01f, 0f);
             //Debug.WriteLine(LerpConstant);
+    
+            UpdateLocalPlayer();
 
             UpdatePlayers();
         }
@@ -140,7 +187,14 @@ namespace Client
         {
             foreach(Player player in Players.Values)
             {
-                Camera.ToDraw += () => player.Draw();
+                player.Draw();
+            }
+            if (ShowInteractText)
+            {
+                Point mousePos = InputManager.GetMousePos();
+                mousePos.X += InteractTextOffset;
+                mousePos.Y += InteractTextOffset;
+                Camera.DrawString("Interact", mousePos, Color.White);
             }
         }
 
