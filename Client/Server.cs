@@ -78,6 +78,13 @@ namespace Client
             };
         }
 
+        public static void MoveCamera()
+        {
+            Vector2 InputDirection = InputManager.GetInput() * 5f;
+
+            Camera.Move(InputDirection);
+        }
+
         public static void Update(GameTime gameTime)
         {
             if (!IsRunning)
@@ -99,6 +106,8 @@ namespace Client
                 HandleTick();
                 CurrentTick++;
             }
+            Tilemap.Update();
+            MoveCamera();
         }
 
         public static void Write(string message)
@@ -168,6 +177,7 @@ namespace Client
                 SendGlobalMessage(message);
             }
             PlayerManager.ProcessPlayerMovement(Mode.Server);
+            PlayerManager.UpdatePlayers();
         }
 
         public static void SetTick(int tick)

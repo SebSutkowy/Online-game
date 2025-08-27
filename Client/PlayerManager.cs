@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using LiteNetLib;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -63,6 +64,8 @@ namespace Client
         }
         private void CheckForInteraction(int id)
         {
+
+            // INTERACTION WITH CHESTS
             Player player = Players[id];
             Point mousePos = Tilemap.GetTilemapPos(Camera.AccountForOffset(InputManager.GetMousePos()));
             Debug.WriteLine($"mouse pos: {mousePos}");
@@ -83,6 +86,29 @@ namespace Client
             }
         }
        
+        private void CheckTrapInteractions(int playerId)
+        {
+            Vector2 playerPos = Players[playerId].Center;
+            Point tilemapPos = Tilemap.GetTilemapPos(playerPos);
+            Tile playerTile = Tilemap.GetInteractiveTile(tilemapPos);
+
+            if (playerTile == null)
+                return;
+            Debug.WriteLine(playerTile.Type);
+
+            if (playerTile.Type == TileType.Trap)
+            {
+                Rectangle damageBox = Tilemap.TileToHitbox(tilemapPos);
+                int TrapDamage = -5;
+                int TrapPeriod = 30;
+                int TrapTime = 5 * 60;
+                EffectBox box = new EffectBox(damageBox, TrapDamage, TrapPeriod, TrapTime);
+                if (!Tilemap.EffectBoxAlreadyThere(box.Position))
+                    Tilemap.AddEffectBox(box);  
+            }
+
+        }
+
         public void CreatePlayer(int playerId)
         {
             Players.Add(playerId, new Player(BlankTexture));
@@ -111,12 +137,37 @@ namespace Client
             UpdatePlayers();
         }
 
+        public Player GetPlayer(int playerId) => Players.ContainsKey(playerId) ? Players[playerId] : null; 
+
         public StatePayload[] GetPlayerStates(int playerId) => Players[playerId].StateBuffer; 
 
         public void UpdatePlayers()
         {
-            foreach (Player player in Players.Values)
+            foreach (var (playerId, player) in Players)
+            {
                 player.Update();
+                CheckTrapInteractions(playerId);
+                Tilemap.CheckBoxCollisions(playerId);
+            }
+        }
+
+        public void ChangePlayerHealth(int id, int health)
+        {
+            Player player = Players[id];
+            player.ChangeHealth(health);
+
+            if (Server.IsRunning)
+            {
+                string message = Message.CreatePlayerHealthChangeMessage(id, player.Health);
+                Server.SendGlobalMessage(message);
+            }
+
+        }
+
+        public void SetPlayerHealth(int id, int health)
+        {
+            Player player = Players[id];
+            player.SetHealth(health);
         }
 
         public void CheckIfPlayerExists(int id)

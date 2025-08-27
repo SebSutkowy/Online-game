@@ -3,10 +3,11 @@ using Microsoft.Xna.Framework;
 using System.Net.Sockets;
 using System.Diagnostics;
 using System.Xml.Schema;
+using System;
 
 namespace Client
 {
-    internal class Player
+    public class Player
     {
         public Texture2D Texture { get; set; }
         public Vector2 Position { get; set; }
@@ -16,15 +17,15 @@ namespace Client
         public InputPayload[] InputBuffer = new InputPayload[Client.BUFFER_SIZE];
         public Vector2 Size { get; set; } = new Vector2(100, 100);
         public float Speed { get; set; } = 200f;
-        public int Health { get; set; } = 100;
+        public int Health { get; private set; } = 100;
+        public int MaxHealth { get; private set; } = 100;
 
-        public Rectangle Hitbox { get; private set; }
+        public Rectangle Hitbox => new Rectangle((int)Position.X, (int)Position.Y, (int)Size.X, (int)Size.Y);
 
         public Player(Texture2D texture)
         { 
             Texture = texture;
             Position = Vector2.Zero;
-            UpdateHitbox();
         }
 
         public Player(Texture2D texture, Vector2 position, Vector2 size, int bufferSize)
@@ -33,7 +34,6 @@ namespace Client
             Position = position;
             Size = size;
             StateBuffer = new StatePayload[bufferSize];
-            Hitbox = new Rectangle((int)Position.X, (int)Position.Y, (int)Size.X, (int)Size.Y);
         }
 
         public void ChangeStateBuffer(int tick, StatePayload state)
@@ -49,21 +49,24 @@ namespace Client
         {
             int tick = Client.GetTick();
 
-            int bufferIndex = (tick - 5) % Client.BUFFER_SIZE;
+            int pastTick = tick - 5;
+            int bufferIndex = ((pastTick % Client.BUFFER_SIZE) + Client.BUFFER_SIZE) % Client.BUFFER_SIZE;
             StatePayload state = StateBuffer[bufferIndex];
 
             if (state != null && state.Tick == tick - 5)
                 Position = state.Position;
-            
-
-
-            UpdateHitbox();
         }
 
-        private void UpdateHitbox()
+        public void ChangeHealth(int amount)
         {
-            Hitbox = new Rectangle((int)Position.X, (int)Position.Y, (int)Size.X, (int)Size.Y);
+            Health = Math.Clamp(Health + amount, 0, MaxHealth);
         }
+
+        public void SetHealth(int health)
+        {
+            Health = Math.Clamp(health, 0, MaxHealth);
+        }
+
 
         // USE PROCESS MOVEMENT LATER --> FOR CLIENT RECONCILIATION
         public StatePayload ProcessMovement(InputPayload input, Mode networkMode)
@@ -91,7 +94,9 @@ namespace Client
 
         public void Draw()
         {
+            Point pos = new Point(5, 5);
             Camera.Draw(Texture, Hitbox, Color.White);
+            Camera.DrawString($"Health: {Health}", pos, Color.White);
         }
     }
 }

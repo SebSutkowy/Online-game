@@ -59,6 +59,7 @@ public class Game1 : Game
         Tilemap.ImportTexture(TileType.Wall, Content.Load<Texture2D>("WallTile"));
         Tilemap.ImportTexture(TileType.Trap, Content.Load<Texture2D>("TrapTile"));
         Tilemap.ImportTexture(TileType.Chest, Content.Load<Texture2D>("ChestTile"));
+        Tilemap.ImportTexture(TileType.ActiveTrap, Content.Load<Texture2D>("ActivatedTrapTile"));
 
 
         _font = Content.Load<SpriteFont>("Text");

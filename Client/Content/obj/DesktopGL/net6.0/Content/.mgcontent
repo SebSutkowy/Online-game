@@ -4,6 +4,7 @@
   <Platform>DesktopGL</Platform>
   <Config />
   <SourceFiles>
+    <File>C:/Users/GGBes/source/repos/Online Game/Client/Content/ActivatedTrapTile.png</File>
     <File>C:/Users/GGBes/source/repos/Online Game/Client/Content/ChestTile.png</File>
     <File>C:/Users/GGBes/source/repos/Online Game/Client/Content/Cursor.png</File>
     <File>C:/Users/GGBes/source/repos/Online Game/Client/Content/FloorTile.png</File>
@@ -12,6 +13,7 @@
     <File>C:/Users/GGBes/source/repos/Online Game/Client/Content/WallTile.png</File>
   </SourceFiles>
   <DestFiles>
+    <File xsi:nil="true" />
     <File xsi:nil="true" />
     <File xsi:nil="true" />
     <File xsi:nil="true" />

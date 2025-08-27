@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System;
+using System.Runtime.InteropServices;
+using System.Diagnostics;
 
 
 namespace Client
@@ -14,7 +16,8 @@ namespace Client
         Floor = 0,
         Wall = 1,
         Trap = 2,
-        Chest = 3
+        Chest = 3,
+        ActiveTrap = 4
     }
 
     public class Tile
@@ -42,13 +45,17 @@ namespace Client
         private static HashSet<TileType> InteractiveTiles = new HashSet<TileType>()
         {
             TileType.Trap,
-            TileType.Chest
+            TileType.Chest,
+            TileType.ActiveTrap
         };
         private static Dictionary<Point, Tile> tilemap = new Dictionary<Point, Tile>();
         private static Dictionary<Point, Tile> InteractiveTilemap = new Dictionary<Point, Tile>();
 
         private static List<TilemapChange> ChangesYetToHappen = new List<TilemapChange>();
         public static List<TilemapChange> Changes { get; private set; } = new List<TilemapChange>();
+
+        private static List<EffectBox> EffectBoxes = new List<EffectBox>();
+        private static List<Point> EffectBoxLocations = new List<Point>();
 
         public static void AddChanges(TilemapChange change, Mode networkMode)
         {
@@ -69,6 +76,7 @@ namespace Client
 
         public static void Update()
         {
+            // CHANGES
             List<TilemapChange> changesToRemove = new List<TilemapChange>();
             foreach (TilemapChange change in ChangesYetToHappen)
             {
@@ -85,21 +93,61 @@ namespace Client
                 if (ChangesYetToHappen.Contains(change))
                     ChangesYetToHappen.Remove(change);
             }
+
+            // CREATING DAMAGE BOXES / HEAL BOXES
+            Debug.WriteLine("1");
+            for (int i = EffectBoxes.Count - 1; i >= 0; i--)
+            {
+                Debug.WriteLine("2");
+                EffectBox box = EffectBoxes[i];
+                box.Update();
+                if (box.Lifespan <= 0)
+                {
+                    EffectBoxes.RemoveAt(i);
+                    EffectBoxLocations.Remove(box.Position);
+                    InteractiveTilemap[GetTilemapPos(box.Position)].Type = TileType.Trap;
+                    string message = Message.CreateTrapToggleMessage(GetTilemapPos(box.Position), TrapActivationStatus.Inactive);
+                    Server.SendGlobalMessage(message);
+                }
+            }
         }
+
+        public static void CheckBoxCollisions(int playerId)
+        {
+            foreach (EffectBox box in EffectBoxes)
+            {
+                box.UpdateCollision(playerId);
+            }
+        }
+
+        public static bool EffectBoxAlreadyThere(Point point) => EffectBoxLocations.Contains(point);
+
+        public static void AddEffectBox(EffectBox box)
+        {
+            EffectBoxes.Add(box);
+            EffectBoxLocations.Add(box.Position);
+            InteractiveTilemap[GetTilemapPos(box.Position)].Type = TileType.ActiveTrap;
+            string message = Message.CreateTrapToggleMessage(GetTilemapPos(box.Position), TrapActivationStatus.Active);
+            Server.SendGlobalMessage(message);
+        }
+
+
+        public static Rectangle TileToHitbox(Point pos) => new Rectangle(pos.X * TILE_SIZE, pos.Y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
 
         public static Point GetTilemapPos(Vector2 pos)
         {
             Point tilemapPos = new Point();
-            float dx = pos.X, dy = pos.Y;
             int tileSize = (int)(TILE_SIZE / Camera.Distance);
-            if (dx >= 0)
-                tilemapPos.X = (int)(dx / tileSize);
-            else if (dx < 0)
-                tilemapPos.X = (int)((dx - tileSize) / tileSize);
-            if (dy >= 0)
-                tilemapPos.Y = (int)(dy / tileSize);
-            else if (dy < 0)
-                tilemapPos.Y = (int)((dy - tileSize) / tileSize);
+            float dx = (pos.X / tileSize), dy = (pos.Y / tileSize);
+            if (dx < 0 && dx % 1 != 0)
+                tilemapPos.X = (int)dx - 1;
+            else
+                tilemapPos.X = (int)dx;
+            if (dy < 0 && dy % 1 != 0)
+                tilemapPos.Y = (int)dy - 1;
+            else
+                tilemapPos.Y = (int)dy;
+
 
             return tilemapPos;
         }
@@ -107,16 +155,16 @@ namespace Client
         public static Point GetTilemapPos(Point pos)
         {
             Point tilemapPos = new Point();
-            float dx = pos.X, dy = pos.Y;
             int tileSize = (int)(TILE_SIZE / Camera.Distance);
-            if (dx >= 0)
-                tilemapPos.X = (int)(dx / tileSize);
-            else if (dx < 0)
-                tilemapPos.X = (int)((dx - tileSize) / tileSize);
-            if (dy >= 0)
-                tilemapPos.Y = (int)(dy / tileSize);
-            else if (dy < 0)
-                tilemapPos.Y = (int)((dy - tileSize) / tileSize);
+            float dx = (pos.X / tileSize), dy = (pos.Y / tileSize);
+            if (dx < 0 && dx % 1 != 0)
+                tilemapPos.X = (int)dx - 1;
+            else
+                tilemapPos.X = (int)dx;
+            if (dy < 0 && dy % 1 != 0)
+                tilemapPos.Y = (int)dy - 1;
+            else
+                tilemapPos.Y = (int)dy;
 
             return tilemapPos;
         }

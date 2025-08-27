@@ -17,7 +17,15 @@ enum MessageType : ushort
     PlayerState = 5,
     PlayerInput = 6,
     Interaction = 7,
-    InteractionConfirmation = 8
+    InteractionConfirmation = 8,
+    PlayerHealthChange = 9,
+    TrapActivation = 10
+}
+
+enum TrapActivationStatus : ushort
+{
+    Active = 0,
+    Inactive = 1
 }
 
 static class Message
@@ -117,6 +125,22 @@ static class Message
                 Tilemap.AddChanges(Change, Mode.Client);
                 Client.Write($"Received Interaction confirmation position: {tilemapPos}");
                 break;
+            case MessageType.PlayerHealthChange:
+                id = int.Parse(splitMessage[1]);
+                int newHealth = int.Parse(splitMessage[2]);
+                Client.PlayerManager.SetPlayerHealth(id, newHealth);
+                Client.Write($"Received new health message: {newHealth}");
+                break;
+            case MessageType.TrapActivation:
+                tilemapPos.X = int.Parse(splitMessage[1]);
+                tilemapPos.Y = int.Parse(splitMessage[2]);
+                TrapActivationStatus status = (TrapActivationStatus) ushort.Parse(splitMessage[3]);
+                if (status == TrapActivationStatus.Inactive)
+                    Tilemap.AddTile(tilemapPos, TileType.Trap);
+                else
+                    Tilemap.AddTile(tilemapPos, TileType.ActiveTrap);
+                Client.Write($"Received new Trap toggle message: {tilemapPos}");
+                break;
         }
     }
 
@@ -136,5 +160,9 @@ static class Message
 
     public static string CreateInteractionMessage(int id, int tick, Point tilemapPos) => $"{(ushort)MessageType.Interaction} {id} {tick} {tilemapPos.X} {tilemapPos.Y}";
     public static string CreateInteractionConfirmationMessage(int id, int tick, Point tilemapPos, string seed) => $"{(ushort)MessageType.InteractionConfirmation} {id} {tick} {tilemapPos.X} {tilemapPos.Y} {seed}";
+
+    public static string CreatePlayerHealthChangeMessage(int id, int newHealth) => $"{(ushort)MessageType.PlayerHealthChange} {id} {newHealth}";
+
+    public static string CreateTrapToggleMessage(Point tilemapPos, TrapActivationStatus ActivatedStatus) => $"{(ushort)MessageType.TrapActivation} {tilemapPos.X} {tilemapPos.Y} {(ushort)ActivatedStatus}";
 
 }

@@ -2,7 +2,7 @@
 
 namespace Client
 {
-    class StatePayload
+    public class StatePayload
     {
         public int Tick;
         public Vector2 Position;
@@ -17,7 +17,7 @@ namespace Client
 
     }
 
-    class Payload
+    public class Payload
     {
         public int Tick { get; set; }
         public float X { get; set; }
@@ -25,7 +25,7 @@ namespace Client
 
     }
 
-    class InputPayload
+    public class InputPayload
     {
         public int Tick;
         public Vector2 Input;
