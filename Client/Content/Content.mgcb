@@ -49,7 +49,7 @@
 /processorParam:TextureFormat=Color
 /build:ChestTile.png
 
-#begin Cursor.png
+#begin DoorTile.png
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -59,7 +59,7 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Cursor.png
+/build:DoorTile.png
 
 #begin FloorTile.png
 /importer:TextureImporter
@@ -85,6 +85,18 @@
 /processorParam:TextureFormat=Color
 /build:InteractCursor.png
 
+#begin NormalCursor.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:NormalCursor.png
+
 #begin Text.spritefont
 /importer:FontDescriptionImporter
 /processor:FontDescriptionProcessor
@@ -103,6 +115,13 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:TrapTile.png
+
+#begin UI_Font.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:UI_Font.spritefont
 
 #begin WallTile.png
 /importer:TextureImporter

@@ -21,7 +21,7 @@ public class Game1 : Game
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
 
-    private Texture2D serverTexture, clientTexture, cursorTexture;
+    private Texture2D serverTexture, clientTexture;
 
     private SpriteFont _font;
 
@@ -51,11 +51,9 @@ public class Game1 : Game
 
         // TODO: use this.Content to load your game content here
 
-        Tilemap.ImportTexture(TileType.Floor, Content.Load<Texture2D>("FloorTile"));
-        Tilemap.ImportTexture(TileType.Wall, Content.Load<Texture2D>("WallTile"));
-        Tilemap.ImportTexture(TileType.Trap, Content.Load<Texture2D>("TrapTile"));
-        Tilemap.ImportTexture(TileType.Chest, Content.Load<Texture2D>("ChestTile"));
-        Tilemap.ImportTexture(TileType.ActiveTrap, Content.Load<Texture2D>("ActivatedTrapTile"));
+        Tilemap.ImportTextures(Content);
+
+        UI.ImportTextures(Content);
 
 
         _font = Content.Load<SpriteFont>("Text");
@@ -65,7 +63,6 @@ public class Game1 : Game
         clientTexture = new Texture2D(GraphicsDevice, 1, 1);
         clientTexture.SetData(new[] { new Color(230, 32, 32, 128)});
 
-        cursorTexture = Content.Load<Texture2D>("cursor");
         Server.SetPlayerTexture(serverTexture);
         Client.SetPlayerTexture(clientTexture);
 
@@ -79,18 +76,9 @@ public class Game1 : Game
         InputManager.Update();
 
         NetworkManager.Update(gameTime);
+        UI.Update();
 
         base.Update(gameTime);
-    }
-
-    public void DrawCursor()
-    {
-        Point pos = InputManager.GetMousePos();
-        pos.X -= cursorTexture.Width / 2;
-        pos.Y -= cursorTexture.Height / 2;
-        pos = Camera.AccountForOffset(pos);
-        Rectangle cursor = new Rectangle(pos.X, pos.Y, cursorTexture.Width, cursorTexture.Height);
-        Camera.Draw(cursorTexture, cursor, Color.White);
     }
 
     protected override void Draw(GameTime gameTime)
@@ -102,7 +90,8 @@ public class Game1 : Game
         {
             Tilemap.Draw();
             NetworkManager.Draw();
-            DrawCursor();
+
+            UI.Draw();
         };
 
         Camera.Display(_spriteBatch);

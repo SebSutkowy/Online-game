@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Client;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
@@ -10,6 +12,7 @@ namespace Client
     {
         public Dictionary<Point, Tile> Tilemap { get; set; }
         public Dictionary<Point, Tile> InteractiveTilemap { get; set; }
+        public TilemapTags Tags { get; set; }
     }
 
     public class PointConverter : JsonConverter<Point>
@@ -63,17 +66,19 @@ namespace Client
         {
             TileType type = TileType.Floor;
             Point position = new Point();
+            TileTags tags = TileTags.None;
 
             while (reader.Read())
             {
-                if(reader.TokenType == JsonTokenType.EndObject)
+                if (reader.TokenType == JsonTokenType.EndObject)
                     return new Tile()
                     {
                         Position = position,
-                        Type = type
+                        Type = type,
+                        Tags = tags
                     };
-                
-                if(reader.TokenType == JsonTokenType.PropertyName)
+
+                if (reader.TokenType == JsonTokenType.PropertyName)
                 {
                     string propertyName = reader.GetString();
                     reader.Read();
@@ -86,6 +91,10 @@ namespace Client
                         case "Type":
                             type = JsonSerializer.Deserialize<TileType>(ref reader, options);
                             break;
+                        case "Tags":
+                            tags = (TileTags)JsonSerializer.Deserialize<int>(ref reader, options);
+                            break;
+
                     }
                 }
             }
@@ -100,6 +109,8 @@ namespace Client
             JsonSerializer.Serialize(writer, value.Position, options);
             writer.WritePropertyName("Type");
             JsonSerializer.Serialize(writer, value.Type, options);
+            writer.WritePropertyName("Tags");
+            JsonSerializer.Serialize(writer, value.Tags, options);
             writer.WriteEndObject();
         }
     }
@@ -117,6 +128,8 @@ namespace Client
 
                 if (doc.RootElement.TryGetProperty("InteractiveTilemap", out JsonElement interactiveTilemapElement))
                     tilemapData.InteractiveTilemap = DeserializeMap(interactiveTilemapElement, options);
+                if (doc.RootElement.TryGetProperty("Tags", out JsonElement tagsElement))
+                    tilemapData.Tags = (TilemapTags)JsonSerializer.Deserialize<int>(tagsElement, options);
             }
 
             return tilemapData;
@@ -143,13 +156,15 @@ namespace Client
             SerializeMap(writer, value.Tilemap, options);
             writer.WritePropertyName("InteractiveTilemap");
             SerializeMap(writer, value.InteractiveTilemap, options);
+            writer.WritePropertyName("Tags");
+            JsonSerializer.Serialize(writer, (int)value.Tags, options);
             writer.WriteEndObject();
         }
 
         public void SerializeMap(Utf8JsonWriter writer, Dictionary<Point, Tile> value, JsonSerializerOptions options)
         {
             writer.WriteStartArray();
-            
+
             foreach (var pair in value)
             {
                 writer.WriteStartObject();
@@ -159,7 +174,7 @@ namespace Client
 
                 writer.WritePropertyName("Value");
                 JsonSerializer.Serialize(writer, pair.Value, options);
-                
+
                 writer.WriteEndObject();
             }
 

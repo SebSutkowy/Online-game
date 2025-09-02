@@ -7,14 +7,18 @@
     <File>C:/Users/GGBes/source/repos/Online Game/Client/Content/ActivatedTrapTile.png</File>
     <File>C:/Users/GGBes/source/repos/Online Game/Client/Content/AttackCursor.png</File>
     <File>C:/Users/GGBes/source/repos/Online Game/Client/Content/ChestTile.png</File>
-    <File>C:/Users/GGBes/source/repos/Online Game/Client/Content/Cursor.png</File>
+    <File>C:/Users/GGBes/source/repos/Online Game/Client/Content/DoorTile.png</File>
     <File>C:/Users/GGBes/source/repos/Online Game/Client/Content/FloorTile.png</File>
     <File>C:/Users/GGBes/source/repos/Online Game/Client/Content/InteractCursor.png</File>
+    <File>C:/Users/GGBes/source/repos/Online Game/Client/Content/NormalCursor.png</File>
     <File>C:/Users/GGBes/source/repos/Online Game/Client/Content/Text.spritefont</File>
     <File>C:/Users/GGBes/source/repos/Online Game/Client/Content/TrapTile.png</File>
+    <File>C:/Users/GGBes/source/repos/Online Game/Client/Content/UI_Font.spritefont</File>
     <File>C:/Users/GGBes/source/repos/Online Game/Client/Content/WallTile.png</File>
   </SourceFiles>
   <DestFiles>
+    <File xsi:nil="true" />
+    <File xsi:nil="true" />
     <File xsi:nil="true" />
     <File xsi:nil="true" />
     <File xsi:nil="true" />
