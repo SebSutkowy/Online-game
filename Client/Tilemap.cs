@@ -95,10 +95,8 @@ namespace Client
             }
 
             // CREATING DAMAGE BOXES / HEAL BOXES
-            Debug.WriteLine("1");
             for (int i = EffectBoxes.Count - 1; i >= 0; i--)
             {
-                Debug.WriteLine("2");
                 EffectBox box = EffectBoxes[i];
                 box.Update();
                 if (box.Lifespan <= 0)
@@ -106,6 +104,7 @@ namespace Client
                     EffectBoxes.RemoveAt(i);
                     EffectBoxLocations.Remove(box.Position);
                     InteractiveTilemap[GetTilemapPos(box.Position)].Type = TileType.Trap;
+                    Server.PlayerManager.RemoveEffectBox(box.Position);
                     string message = Message.CreateTrapToggleMessage(GetTilemapPos(box.Position), TrapActivationStatus.Inactive);
                     Server.SendGlobalMessage(message);
                 }

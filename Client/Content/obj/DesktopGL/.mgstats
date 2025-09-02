@@ -1,8 +1,10 @@
 Source File,Dest File,Processor Type,Content Type,Source File Size,Dest File Size,Build Seconds
 "C:/Users/GGBes/source/repos/Online Game/Client/Content/ActivatedTrapTile.png","C:/Users/GGBes/source/repos/Online Game/Client/Content/bin/DesktopGL/ActivatedTrapTile.xnb","TextureProcessor","Texture2DContent",744,40085,0.0971759
+"C:/Users/GGBes/source/repos/Online Game/Client/Content/AttackCursor.png","C:/Users/GGBes/source/repos/Online Game/Client/Content/bin/DesktopGL/AttackCursor.xnb","TextureProcessor","Texture2DContent",200,1109,0.0863522
 "C:/Users/GGBes/source/repos/Online Game/Client/Content/ChestTile.png","C:/Users/GGBes/source/repos/Online Game/Client/Content/bin/DesktopGL/ChestTile.xnb","TextureProcessor","Texture2DContent",201,40085,0.0987627
 "C:/Users/GGBes/source/repos/Online Game/Client/Content/Cursor.png","C:/Users/GGBes/source/repos/Online Game/Client/Content/bin/DesktopGL/Cursor.xnb","TextureProcessor","Texture2DContent",268,1109,0.0811732
 "C:/Users/GGBes/source/repos/Online Game/Client/Content/FloorTile.png","C:/Users/GGBes/source/repos/Online Game/Client/Content/bin/DesktopGL/FloorTile.xnb","TextureProcessor","Texture2DContent",169,40085,0.0030309
+"C:/Users/GGBes/source/repos/Online Game/Client/Content/InteractCursor.png","C:/Users/GGBes/source/repos/Online Game/Client/Content/bin/DesktopGL/InteractCursor.xnb","TextureProcessor","Texture2DContent",210,1109,0.0026043
 "C:/Users/GGBes/source/repos/Online Game/Client/Content/Text.spritefont","C:/Users/GGBes/source/repos/Online Game/Client/Content/bin/DesktopGL/Text.xnb","FontDescriptionProcessor","SpriteFontContent",2070,21535,0.1643098
 "C:/Users/GGBes/source/repos/Online Game/Client/Content/TrapTile.png","C:/Users/GGBes/source/repos/Online Game/Client/Content/bin/DesktopGL/TrapTile.xnb","TextureProcessor","Texture2DContent",763,40085,0.0029217
 "C:/Users/GGBes/source/repos/Online Game/Client/Content/WallTile.png","C:/Users/GGBes/source/repos/Online Game/Client/Content/bin/DesktopGL/WallTile.xnb","TextureProcessor","Texture2DContent",172,40085,0.0031094

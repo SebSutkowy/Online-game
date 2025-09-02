@@ -11,7 +11,6 @@ namespace Client
         public Point Position => new Point(Bounds.X, Bounds.Y);
         public Point Size => new Point(Bounds.Width, Bounds.Height);
         public int Effect { get; set; }
-        public int EffectTimer { get; set; } = 0;
         public int EffectPeriod { get; set; }
         public int Lifespan { get; set; }
 
@@ -33,15 +32,18 @@ namespace Client
 
         public void UpdateCollision(int playerId)
         {
-            if (!Server.IsRunning)
+            if (!Server.IsRunning && !Server.PlayerManager.Contains(playerId))
                 return; // Only server sided
-            Player player = Server.PlayerManager.GetPlayer(playerId);
-            if (IsColliding(player.Hitbox))
-                EffectTimer++;
-            else
-                EffectTimer = 0;
 
-            if (EffectTimer >= EffectPeriod && EffectTimer % EffectPeriod == 0)
+            Player player = Server.PlayerManager.GetPlayer(playerId);
+            if (!player.EffectBoxTimers.ContainsKey(Position))
+                player.EffectBoxTimers.Add(Position, 0);
+            if (IsColliding(player.Hitbox))
+                player.EffectBoxTimers[Position]++;
+            else
+                player.EffectBoxTimers[Position] = 0;
+
+            if (player.EffectBoxTimers[Position] >= EffectPeriod && player.EffectBoxTimers[Position] % EffectPeriod == 0)
                 Server.PlayerManager.ChangePlayerHealth(playerId, Effect);
         }
 

@@ -176,7 +176,7 @@ namespace Client
                 string message = Message.CreateSyncMessage(CurrentTick);
                 SendGlobalMessage(message);
             }
-            PlayerManager.ProcessPlayerMovement(Mode.Server);
+            PlayerManager.ProcessPlayerMovement();
             PlayerManager.UpdatePlayers();
         }
 

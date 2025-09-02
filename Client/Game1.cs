@@ -24,10 +24,6 @@ public class Game1 : Game
     private Texture2D serverTexture, clientTexture, cursorTexture;
 
     private SpriteFont _font;
-    private Point _screenDimensions;
-
-    private Mode NetworkMode = Mode.None;
-    private bool displayConsole = false;
 
     public Game1()
     {
@@ -77,57 +73,12 @@ public class Game1 : Game
         Camera.AddFont(_font);
     }
 
-    public void ChangeNetworkMode()
-    {
-        if (NetworkMode != Mode.None)
-            return; // Can only change when no mode is selected
-        if (InputManager.ReceivedPressedInput(Input.SwitchToHybrid))
-        {
-            NetworkMode = Mode.Hybrid;
-            Debug.WriteLine("Switched to Hybrid");
-        }
-        else if (InputManager.ReceivedPressedInput(Input.SwitchToServer))
-        {
-            NetworkMode = Mode.Server;
-            if(!Console.Display)
-                Console.ToggleVisibility();
-            Debug.WriteLine("Switched to Server");
-            Tilemap.ImportFrom("Presets/SampleMap1.json");
-        }
-        else if (InputManager.ReceivedPressedInput(Input.SwitchToClient))
-        {
-            NetworkMode = Mode.Client;
-            if (Console.Display)
-                Console.ToggleVisibility();
-            Debug.WriteLine("Switched to Client");
-            Tilemap.ImportFrom("Presets/SampleMap1.json");
-        }
-    }
-
     protected override void Update(GameTime gameTime)
     {
         // TODO: Add your update logic here
         InputManager.Update();
 
-        ChangeNetworkMode();
-        int port = 9050;
-        switch (NetworkMode)
-        {
-            case Mode.Server:
-                if(!Server.IsRunning)
-                    Server.StartServer(port);
-                else
-                    Server.Update(gameTime);
-                break;
-            case Mode.Client:
-                if (!Client.IsRunning)
-                    Client.Initialize();
-                else
-                    Client.Update(gameTime);
-                break;
-        }
-
-
+        NetworkManager.Update(gameTime);
 
         base.Update(gameTime);
     }
@@ -147,23 +98,12 @@ public class Game1 : Game
         GraphicsDevice.Clear(Color.Black);
 
         // TODO: Add your drawing code 
-        Camera.ToDraw += () => Tilemap.Draw();
-
-        
-        switch(NetworkMode)
+        Camera.ToDraw += () =>
         {
-            case Mode.Client:
-                Camera.ToDraw += () => Client.PlayerManager.DrawPlayers();
-                break;
-            case Mode.Server:
-                Camera.ToDraw += () => Server.PlayerManager.DrawPlayers();
-                break;
-        }
-
-        if (InputManager.ReceivedPressedInput(Input.DisplayConsole))
-            Console.ToggleVisibility();
-        Camera.ToDraw += () => Console.DisplayConsole();
-        Camera.ToDraw += () => DrawCursor();
+            Tilemap.Draw();
+            NetworkManager.Draw();
+            DrawCursor();
+        };
 
         Camera.Display(_spriteBatch);
 

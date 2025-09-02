@@ -17,23 +17,12 @@ namespace Client
         private static ConsoleMessage LastMessage;
     
         private static SpriteFont Font;
-        private static int SCREEN_WIDTH;
-        private static int SCREEN_HEIGHT;
         private static int messageCount = 0;
         private const int MAX_MESSAGE_COUNT = 50;
-
-        public static bool Display { get; private set; } = false;
 
         public static void Initialize(SpriteFont font)
         {
             Font = font;
-            SCREEN_HEIGHT = Camera.HEIGHT;
-            SCREEN_WIDTH = Camera.WIDTH;
-        }
-
-        public static void ToggleVisibility()
-        {
-            Display = !Display;
         }
 
         public static void WriteLine(string message)
@@ -66,8 +55,6 @@ namespace Client
 
         public static void DisplayConsole()
         {
-            if (!Display)
-                return;
             int height;
             int yPos = 10;
             ConsoleMessage currentMessage = FirstMessage;

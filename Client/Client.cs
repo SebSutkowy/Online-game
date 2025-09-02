@@ -67,8 +67,8 @@ namespace Client
             if (Connection)
             {
                 TickTimer(gameTime);
-                if (InputManager.ReceivedPressedInput(Input.GetStates))
-                    GetStates();
+                //if (InputManager.ReceivedPressedInput(Input.GetStates))
+                //    GetStates();
                 PlayerManager.Update();
                 Tilemap.Update();
             }
@@ -173,19 +173,19 @@ namespace Client
             Console.WriteLine($"[CLIENT - {CurrentTick}t] {message}");
         }
 
-        public static void GetStates()
-        {
-            int i = 0;
-            Dictionary<int, Payload> states = new Dictionary<int, Payload>();
-            foreach (StatePayload statePayload in PlayerManager.GetPlayerStates(GetClientId()))
-            {
-                if (statePayload != null)
-                    states.Add(i, statePayload.ToPayload());
-                i++;
-            }
-            string jsonText = JsonSerializer.Serialize(states, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText("playerStatesDebugging.json", jsonText);
-        }
+        //public static void GetStates()
+        //{
+        //    int i = 0;
+        //    Dictionary<int, Payload> states = new Dictionary<int, Payload>();
+        //    foreach (StatePayload statePayload in PlayerManager.GetPlayerStates(GetClientId()))
+        //    {
+        //        if (statePayload != null)
+        //            states.Add(i, statePayload.ToPayload());
+        //        i++;
+        //    }
+        //    string jsonText = JsonSerializer.Serialize(states, new JsonSerializerOptions { WriteIndented = true });
+        //    File.WriteAllText("playerStatesDebugging.json", jsonText);
+        //}
 
         #endregion
 

@@ -17,6 +17,9 @@ namespace Client
 
         private float LerpConstant = 0.5f;
 
+        private Point _playerSize = new Point(100, 100);
+        private float _playerSpeed = 200f;
+
         public PlayerManager(Texture2D texture)
         {
             Players = new Dictionary<int, Player>();
@@ -24,7 +27,15 @@ namespace Client
             BlankTexture = texture;
         }
 
-        
+        public void RemoveEffectBox(Point key)
+        {
+            foreach (Player player in Players.Values)
+            {
+                if (player.EffectBoxTimers.ContainsKey(key))
+                    player.EffectBoxTimers.Remove(key);
+            }
+        }
+
         public void Remove(int id)
         {
             Players.Remove(id);
@@ -111,7 +122,7 @@ namespace Client
 
         public void CreatePlayer(int playerId)
         {
-            Players.Add(playerId, new Player(BlankTexture));
+            Players.Add(playerId, new Player(BlankTexture, Vector2.Zero, _playerSize, _playerSpeed));
             InputQueue.Add(playerId, new Queue<InputPayload>());
             string message = Message.CreatePlayerSpawnMessage(playerId, Server.GetTick(), Players[playerId].Position);
             Server.SendGlobalMessage(message);
@@ -139,7 +150,7 @@ namespace Client
 
         public Player GetPlayer(int playerId) => Players.ContainsKey(playerId) ? Players[playerId] : null; 
 
-        public StatePayload[] GetPlayerStates(int playerId) => Players[playerId].StateBuffer; 
+        //public StatePayload[] GetPlayerStates(int playerId) => Players[playerId].StateBuffer; 
 
         public void UpdatePlayers()
         {
@@ -173,7 +184,7 @@ namespace Client
         public void CheckIfPlayerExists(int id)
         {
             if (!Players.ContainsKey(id))
-                Players.Add(id, new Player(BlankTexture));
+                Players.Add(id, new Player(BlankTexture, Vector2.Zero, _playerSize, _playerSpeed));
             if(!InputQueue.ContainsKey(id))
                 InputQueue.Add(id, new Queue<InputPayload>());
         }
@@ -182,23 +193,18 @@ namespace Client
         {
             CheckIfPlayerExists(id);
 
-            int bufferIndex = state.Tick % Client.BUFFER_SIZE;
             Player player = Players[id];
-            player.StateBuffer[bufferIndex] = state;
-            if (player.LastPassedState == null || state.Tick >= player.LastPassedState.Tick)
-                player.LastPassedState = state;
+            player.Position = state.Position;
         }
 
         public void AddInput(int id, InputPayload Input)
         {
             CheckIfPlayerExists(id);
 
-            int bufferIndex = Input.Tick % Client.BUFFER_SIZE;
-            Players[id].InputBuffer[bufferIndex] = Input;
             InputQueue[id].Enqueue(Input);
         }
 
-        public void ProcessPlayerMovement(Mode networkMode)
+        public void ProcessPlayerMovement()
         {
             foreach (var (playerId, player) in Players)
             {
@@ -209,8 +215,8 @@ namespace Client
 
                     bufferIndex = input.Tick % Server.BUFFER_SIZE;
 
-                    StatePayload state = player.ProcessMovement(input, networkMode); ;
-                    if (networkMode == Mode.Server)
+                    StatePayload state = player.ProcessMovement(input); ;
+                    if (NetworkManager.GetMode() == Mode.Server)
                     {
                         SetPlayerState(playerId, state);
                         string message = Message.CreatePlayerStateMessage(playerId, state);
@@ -236,9 +242,14 @@ namespace Client
 
         public void DrawPlayers()
         {
-            foreach(Player player in Players.Values)
+            foreach (Player player in Players.Values)
             {
                 player.Draw();
+            }
+            if (NetworkManager.GetMode() == Mode.Client && Players.ContainsKey(Client.GetClientId()))
+            {
+                Point pos = new Point(5, 5);
+                Camera.DrawString($"Health: {Players[Client.GetClientId()].Health}", pos, Color.White);
             }
             if (ShowInteractText)
             {

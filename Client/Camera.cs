@@ -88,6 +88,12 @@ namespace Client
         {
             spriteBatch.DrawString(spriteFont, text, position, color);
         }
+
+        public static void DrawUI(Texture2D texture, Rectangle rect, Color color)
+        {
+            spriteBatch.Draw(texture, rect, color);
+        }
+
         public static void DrawString(string text, Point position, Color color)
         {
             Vector2 vectorPosition = new Vector2(position.X, position.Y);
