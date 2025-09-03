@@ -56,7 +56,7 @@ namespace Client
             mousePos = Tilemap.GetTilemapPos(mousePos);
             MessagesToWrite.Add($"{mousePos}");
             MessagesToWrite.Add($"{Camera.Offset}");
-            Tile tile = Tilemap.GetInteractiveTile(mousePos);
+            Tile tile = Dungeon.ActiveTilemap.GetInteractiveTile(mousePos);
             if (tile == null)
             {
                 Interacting = false;

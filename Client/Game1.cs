@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace Client;
@@ -50,8 +51,13 @@ public class Game1 : Game
         _spriteBatch = new SpriteBatch(GraphicsDevice);
 
         // TODO: use this.Content to load your game content here
-
-        Tilemap.ImportTextures(Content);
+        List<TilemapName> tilemapnames = new List<TilemapName>()
+        {
+            TilemapName.PlayerSpawn,
+            TilemapName.BossRoom
+        };
+        Camera.ImportTextures(Content);
+        Dungeon.ImportTilemaps(tilemapnames);
 
         UI.ImportTextures(Content);
 
@@ -75,6 +81,7 @@ public class Game1 : Game
         // TODO: Add your update logic here
         InputManager.Update();
 
+        Dungeon.Update();
         NetworkManager.Update(gameTime);
         UI.Update();
 
@@ -88,7 +95,8 @@ public class Game1 : Game
         // TODO: Add your drawing code 
         Camera.ToDraw += () =>
         {
-            Tilemap.Draw();
+            Dungeon.Draw();
+
             NetworkManager.Draw();
 
             UI.Draw();

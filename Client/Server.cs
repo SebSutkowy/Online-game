@@ -54,9 +54,9 @@ namespace Client
                 string message = Message.CreateClientJoinMessage(playerId, CurrentTick);
                 SendMessage(playerId, message);
                 PlayerManager.SendPlayerStates(playerId);
-                foreach (TilemapChange change in Tilemap.Changes)
+                foreach (TilemapChange change in Dungeon.ActiveTilemap.Changes)
                 {
-                    message = Message.CreateInteractionConfirmationMessage(playerId, change.Tick, change.Position, "1");
+                    message = Message.CreateInteractionConfirmationMessage(change.Tick, Dungeon.ActiveTilemapName, change.Position, 1);
                     SendMessage(playerId, message);
                 }
             };
@@ -106,7 +106,7 @@ namespace Client
                 HandleTick();
                 CurrentTick++;
             }
-            Tilemap.Update();
+            Dungeon.UpdateTilemap();
             MoveCamera();
         }
 

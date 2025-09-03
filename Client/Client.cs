@@ -70,7 +70,7 @@ namespace Client
                 //if (InputManager.ReceivedPressedInput(Input.GetStates))
                 //    GetStates();
                 PlayerManager.Update();
-                Tilemap.Update();
+                Dungeon.ActiveTilemap.Update();
             }
         }
 

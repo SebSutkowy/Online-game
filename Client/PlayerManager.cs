@@ -13,7 +13,7 @@ namespace Client
         private Dictionary<int, Queue<InputPayload>> InputQueue;
         private Texture2D BlankTexture;
         private bool ShowInteractText = false;
-        private int InteractTextOffset = 5;
+        private Point InteractTextOffset = new Point(20, -5);
 
         private float LerpConstant = 0.5f;
 
@@ -83,16 +83,16 @@ namespace Client
             Point playerPos = Tilemap.GetTilemapPos(player.Center);
             Debug.WriteLine($"player pos: {playerPos}");
             Debug.WriteLine("---");
-            Tile tile = Tilemap.GetInteractiveTile(mousePos);
+            Tile tile = Dungeon.ActiveTilemap.GetInteractiveTile(mousePos);
 
             ShowInteractText = false;
             if (tile == null)
                 return;
-            if (tile.Type == TileType.Chest && Tilemap.IsANeighbour(playerPos, mousePos))
+            if (tile.Type == TileType.Chest && Tilemap.IsANeighbour(playerPos, mousePos, 2))
                 ShowInteractText = true;
             if (ShowInteractText && InputManager.ReceivedPressedInput(Input.Interact))
             {
-                string message = Message.CreateInteractionMessage(id, Client.GetTick(), mousePos);
+                string message = Message.CreateInteractionMessage(id, Client.GetTick(), Dungeon.ActiveTilemapName, mousePos);
                 Client.SendMessage(message);
             }
         }
@@ -101,7 +101,7 @@ namespace Client
         {
             Vector2 playerPos = Players[playerId].Center;
             Point tilemapPos = Tilemap.GetTilemapPos(playerPos);
-            Tile playerTile = Tilemap.GetInteractiveTile(tilemapPos);
+            Tile playerTile = Dungeon.ActiveTilemap.GetInteractiveTile(tilemapPos);
 
             if (playerTile == null)
                 return;
@@ -113,11 +113,19 @@ namespace Client
                 int TrapDamage = -5;
                 int TrapPeriod = 30;
                 int TrapTime = 5 * 60;
-                EffectBox box = new EffectBox(damageBox, TrapDamage, TrapPeriod, TrapTime);
-                if (!Tilemap.EffectBoxAlreadyThere(box.Position))
-                    Tilemap.AddEffectBox(box);  
+                EffectBox box = new EffectBox(damageBox, TrapDamage, TrapPeriod, TrapTime, EffectBoxTrigger.Trap);
+                if (!Dungeon.ActiveTilemap.EffectBoxAlreadyThere(box.Position))
+                    Dungeon.ActiveTilemap.AddEffectBox(box);  
             }
 
+        }
+
+        public void ResetPositions()
+        {
+            foreach (Player player in Players.Values)
+            {
+                player.Position = Vector2.Zero;
+            }
         }
 
         public void CreatePlayer(int playerId)
@@ -158,7 +166,7 @@ namespace Client
             {
                 player.Update();
                 CheckTrapInteractions(playerId);
-                Tilemap.CheckBoxCollisions(playerId);
+                Dungeon.ActiveTilemap.CheckBoxCollisions(playerId);
             }
         }
 
@@ -208,12 +216,9 @@ namespace Client
         {
             foreach (var (playerId, player) in Players)
             {
-                int bufferIndex = -1;
                 while (InputQueue[playerId].Count > 0)
                 {
                     InputPayload input = InputQueue[playerId].Dequeue();
-
-                    bufferIndex = input.Tick % Server.BUFFER_SIZE;
 
                     StatePayload state = player.ProcessMovement(input); ;
                     if (NetworkManager.GetMode() == Mode.Server)
@@ -254,9 +259,7 @@ namespace Client
             if (ShowInteractText)
             {
                 Point mousePos = InputManager.GetMousePos();
-                mousePos.X += InteractTextOffset;
-                mousePos.Y += InteractTextOffset;
-                Camera.DrawString("Interact", mousePos, Color.White);
+                Camera.DrawString("Interact", mousePos + InteractTextOffset, Color.White);
             }
         }
 

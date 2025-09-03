@@ -21,7 +21,9 @@ enum MessageType : ushort
     PlayerHealthChange = 9,
     TrapActivation = 10,
     EnteredBossRoom = 11,
-    StartBossFight = 12
+    ChangeTilemap = 12,
+    UpdateBoss = 13,
+    UpdateTotem = 14
 }
 
 enum TrapActivationStatus : ushort
@@ -44,7 +46,7 @@ static class Message
         type = (MessageType)typeValue;
 
 
-        int tick, id;
+        int tick, id, health;
         float X, Y;
         Point tilemapPos = new Point();
         string seed;
@@ -107,23 +109,20 @@ static class Message
                 tilemapPos.Y = int.Parse(splitMessage[5]);
                 Change = new TilemapChange()
                 {
-                    PlayerId = id,
                     Tick = tick,
                     Position = tilemapPos
                 };
                 Dungeon.AddChanges(tilemap, Change, Mode.Server);
-                Server.Write($"Received Interaction message position: {tilemapPos}");
+                Server.Write($"Received Interaction message position: {tilemapPos} in {tilemap}");
                 break;
             case MessageType.InteractionConfirmation:
-                id = int.Parse(splitMessage[1]);
-                tick = int.Parse(splitMessage[2]);
-                tilemap = (TilemapName)int.Parse(splitMessage[3]);
-                tilemapPos.X = int.Parse(splitMessage[4]);
-                tilemapPos.Y = int.Parse(splitMessage[5]);
-                seed = splitMessage[6];
+                tick = int.Parse(splitMessage[1]);
+                tilemap = (TilemapName)int.Parse(splitMessage[2]);
+                tilemapPos.X = int.Parse(splitMessage[3]);
+                tilemapPos.Y = int.Parse(splitMessage[4]);
+                seed = splitMessage[5];
                 Change = new TilemapChange()
                 {
-                    PlayerId = id,
                     Tick = tick,
                     Position = tilemapPos
                 };
@@ -148,9 +147,24 @@ static class Message
                 Client.Write($"Received new Trap toggle message: {tilemapPos}");
                 break;
             case MessageType.EnteredBossRoom:
-                Server.SendGlobalMessage(Message.CreateStartBossFightMessage());
                 break;
-            case MessageType.StartBossFight:
+            case MessageType.ChangeTilemap:
+                tilemap = (TilemapName)int.Parse(splitMessage[1]);
+                Client.PlayerManager.ResetPositions();
+                Dungeon.ChangeTilemap(tilemap);
+                break;
+            case MessageType.UpdateBoss:
+                X = float.Parse(splitMessage[1]);
+                Y = float.Parse(splitMessage[2]);
+                health = int.Parse(splitMessage[3]);
+                // update the boss
+
+                break;
+            case MessageType.UpdateTotem:
+                X = float.Parse(splitMessage[1]);
+                Y = float.Parse(splitMessage[2]);
+                health = int.Parse(splitMessage[3]);
+                // update the totem
                 break;
         }
     }
@@ -169,14 +183,18 @@ static class Message
 
     public static string CreatePlayerInputMessage(int id, InputPayload input) => $"{(ushort)MessageType.PlayerInput} {id} {input.Tick} {input.Input.X} {input.Input.Y}";
 
-    public static string CreateInteractionMessage(int id, int tick, TilemapName tilemap, Point tilemapPos) => $"{(ushort)MessageType.Interaction} {id} {tick} {tilemap} {tilemapPos.X} {tilemapPos.Y}";
-    public static string CreateInteractionConfirmationMessage(int id, int tick, TilemapName tilemap, Point tilemapPos, string seed) => $"{(ushort)MessageType.InteractionConfirmation} {id} {tick} {tilemap} {tilemapPos.X} {tilemapPos.Y} {seed}";
+    public static string CreateInteractionMessage(int id, int tick, TilemapName tilemap, Point tilemapPos) => $"{(ushort)MessageType.Interaction} {id} {tick} {(int)tilemap} {tilemapPos.X} {tilemapPos.Y}";
+    public static string CreateInteractionConfirmationMessage(int tick, TilemapName tilemap, Point tilemapPos, int seed) => $"{(ushort)MessageType.InteractionConfirmation} {tick} {(int)tilemap} {tilemapPos.X} {tilemapPos.Y} {seed}";
 
     public static string CreatePlayerHealthChangeMessage(int id, int newHealth) => $"{(ushort)MessageType.PlayerHealthChange} {id} {newHealth}";
 
-    public static string CreateTrapToggleMessage(TilemapName tilemap, Point tilemapPos, TrapActivationStatus ActivatedStatus) => $"{(ushort)MessageType.TrapActivation} {tilemap} {tilemapPos.X} {tilemapPos.Y} {(ushort)ActivatedStatus}";
+    public static string CreateTrapToggleMessage(TilemapName tilemap, Point tilemapPos, TrapActivationStatus ActivatedStatus) => $"{(ushort)MessageType.TrapActivation} {(int)tilemap} {tilemapPos.X} {tilemapPos.Y} {(ushort)ActivatedStatus}";
 
     public static string CreateEnteredBossRoomMessage() => $"{(ushort)MessageType.EnteredBossRoom}";
 
-    public static string CreateStartBossFightMessage() => $"{(ushort)MessageType.StartBossFight}";
+    public static string CreateChangeTilemapMessage(TilemapName tilemap) => $"{(ushort)MessageType.ChangeTilemap} {(int)tilemap}";
+
+    public static string CreateUpdateBossMessage(Vector2 position, int health, int maxHealth) => $"{(ushort)MessageType.UpdateBoss} {position.X} {position.Y} {health} {maxHealth}";
+
+    public static string CreateUpdateTotemMessage(Vector2 position, int health, int maxHealth) => $"{(ushort)MessageType.UpdateTotem} {position.X} {position.Y} {health} {maxHealth}";
 }

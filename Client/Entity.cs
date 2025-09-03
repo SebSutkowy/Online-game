@@ -3,11 +3,12 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Client
 {
-    enum EntityType
+    public enum EntityType
     {
         Player,
         Mob,
-        Boss
+        Boss,
+        Totem
     }
 
     class Entity
@@ -41,7 +42,7 @@ namespace Client
         public Entity(Texture2D texture, float x, float y, int width, int height, float speed)
         {
             Texture = texture;
-            Position = new Vector2(X, Y);
+            Position = new Vector2(x, y);
             Width = width;
             Height = height;
             Speed = speed;

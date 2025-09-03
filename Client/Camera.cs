@@ -1,8 +1,10 @@
 ﻿
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using System;
+using System.IO;
+using System.Collections.Generic;
 
 namespace Client
 {
@@ -19,6 +21,35 @@ namespace Client
 
         private static SpriteBatch spriteBatch;
         private static SpriteFont spriteFont;
+
+        public static Dictionary<TileType, Texture2D> TilemapAssets { get; private set; } = new Dictionary<TileType, Texture2D>();
+        public static Dictionary<EntityType, Texture2D> EntityAssets { get; private set; } = new Dictionary<EntityType, Texture2D>();
+
+        public static void ImportTextures(ContentManager Content)
+        {
+            ImportTilemapTextures(Content);
+            ImportEntityTextures(Content);
+        }
+
+        public static void ImportTilemapTextures(ContentManager Content)
+        {
+            foreach (TileType tileType in Enum.GetValues(typeof(TileType)))
+            {
+                string name = $"{tileType.ToString()}Tile";
+                if (File.Exists($@"Content\{name}.xnb")) 
+                    TilemapAssets[tileType] = Content.Load<Texture2D>(name);
+            }
+        }
+
+        public static void ImportEntityTextures(ContentManager Content)
+        {
+            foreach (EntityType entityType in Enum.GetValues(typeof(EntityType)))
+            {
+                string name = $"{entityType.ToString()}";
+                if (File.Exists($@"Content\{name}.xnb")) 
+                    EntityAssets[entityType] = Content.Load<Texture2D>(name);
+            }
+        }
 
         public static void Zoom(float amount)
         {

@@ -61,7 +61,6 @@ namespace Client
 
     public class TilemapChange
     {
-        public int PlayerId { get; set; }
         public int Tick { get; set; }
         public Point Position { get; set; }
     }
@@ -69,14 +68,14 @@ namespace Client
     public class Tilemap
     {
         public const int TILE_SIZE = 100;
-        private Dictionary<TileType, Texture2D> Assets = new Dictionary<TileType, Texture2D>();
+        private static Dictionary<TileType, Texture2D> Assets => Camera.TilemapAssets;
         private HashSet<TileType> InteractiveTiles = new HashSet<TileType>()
         {
             TileType.Trap,
             TileType.Chest,
             TileType.ActiveTrap
         };
-        public static TilemapName tilemapName;
+        public TilemapName TilemapName;
         private Dictionary<Point, Tile> tilemap { get; set; }
         private Dictionary<Point, Tile> InteractiveTilemap { get; set; }
         private TilemapTags Tags { get; set; }
@@ -92,11 +91,28 @@ namespace Client
             tilemap = data.Tilemap;
             InteractiveTilemap = data.InteractiveTilemap;
             Tags = data.Tags;
+
+            ChangesYetToHappen = new List<TilemapChange>();
+            Changes = new List<TilemapChange>();
+
+            EffectBoxes = new List<EffectBox>();
+            EffectBoxLocations = new List<Point>();
         }
 
         public Tilemap(string filePath)
         {
             Deserialize(filePath);
+
+            if ((Tags & TilemapTags.PlayerSpawn) != 0)
+                TilemapName = TilemapName.PlayerSpawn;
+            else if ((Tags & TilemapTags.BossRoom) != 0)
+                TilemapName = TilemapName.BossRoom;
+
+                ChangesYetToHappen = new List<TilemapChange>();
+            Changes = new List<TilemapChange>();
+
+            EffectBoxes = new List<EffectBox>();
+            EffectBoxLocations = new List<Point>();
         }
 
         public Tilemap()
@@ -125,7 +141,7 @@ namespace Client
                     if (InteractiveTilemap.ContainsKey(change.Position))
                         InteractiveTilemap.Remove(change.Position);
                     Changes.Add(change);
-                    string message = Message.CreateInteractionConfirmationMessage(change.PlayerId, change.Tick, tilemapName, change.Position, "1");
+                    string message = Message.CreateInteractionConfirmationMessage(change.Tick, TilemapName, change.Position, 1);
                     Server.SendGlobalMessage(message);
                     break;
             }
@@ -137,7 +153,7 @@ namespace Client
             List<TilemapChange> changesToRemove = new List<TilemapChange>();
             foreach (TilemapChange change in ChangesYetToHappen)
             {
-                if (change.Tick <= Client.GetTick())
+                if (change.Tick <= Client.GetTick()) 
                 {
                     if (InteractiveTilemap.ContainsKey(change.Position))
                         InteractiveTilemap.Remove(change.Position);
@@ -160,10 +176,13 @@ namespace Client
                 {
                     EffectBoxes.RemoveAt(i);
                     EffectBoxLocations.Remove(box.Position);
-                    InteractiveTilemap[GetTilemapPos(box.Position)].Type = TileType.Trap;
                     Server.PlayerManager.RemoveEffectBox(box.Position);
-                    string message = Message.CreateTrapToggleMessage(tilemapName, GetTilemapPos(box.Position), TrapActivationStatus.Inactive);
-                    Server.SendGlobalMessage(message);
+                    if (box.Trigger == EffectBoxTrigger.Trap)
+                    {
+                        InteractiveTilemap[GetTilemapPos(box.Position)].Type = TileType.Trap;
+                        string message = Message.CreateTrapToggleMessage(TilemapName, GetTilemapPos(box.Position), TrapActivationStatus.Inactive);
+                        Server.SendGlobalMessage(message);
+                    }
                 }
             }
         }
@@ -182,9 +201,12 @@ namespace Client
         {
             EffectBoxes.Add(box);
             EffectBoxLocations.Add(box.Position);
-            InteractiveTilemap[GetTilemapPos(box.Position)].Type = TileType.ActiveTrap;
-            string message = Message.CreateTrapToggleMessage(tilemapName, GetTilemapPos(box.Position), TrapActivationStatus.Active);
-            Server.SendGlobalMessage(message);
+            if (box.Trigger == EffectBoxTrigger.Trap)
+            {
+                InteractiveTilemap[GetTilemapPos(box.Position)].Type = TileType.ActiveTrap;
+                string message = Message.CreateTrapToggleMessage(TilemapName, GetTilemapPos(box.Position), TrapActivationStatus.Active);
+                Server.SendGlobalMessage(message);
+            }
         }
 
 
@@ -218,24 +240,6 @@ namespace Client
 
         public Tile GetInteractiveTile(Point pos) => InteractiveTilemap.ContainsKey(pos) ? InteractiveTilemap[pos] : null;
         public Tile GetTile(Point pos) => tilemap.ContainsKey(pos) ? tilemap[pos] : null;
-
-        public void ImportTexture(TileType type, Texture2D texture)
-        {
-            if (!Assets.ContainsKey(type))
-                Assets.Add(type, texture);
-            else
-                Assets[type] = texture;
-        }
-
-        public void ImportTextures(ContentManager Content)
-        {
-            foreach (TileType tileType in Enum.GetValues(typeof(TileType)))
-            {
-                string name = $"{tileType.ToString()}Tile";
-                if (File.Exists($@"Content\{name}.xnb"))
-                    ImportTexture(tileType, Content.Load<Texture2D>(name));
-            }
-        }
 
         public void AddTile(Point position, TileType type)
         {
@@ -322,7 +326,7 @@ namespace Client
             }
         }
 
-        public void DrawTile(Tile tile, int alpha=255)
+        public static void DrawTile(Tile tile, int alpha=255)
         {
             if (!Assets.ContainsKey(tile.Type))
                 return;
