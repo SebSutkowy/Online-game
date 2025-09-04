@@ -12,6 +12,7 @@ namespace Client
     {
         public int Health { get; private set; } = 100;
         public int MaxHealth { get; private set; } = 100;
+        public int Damage { get; set; } = 50;
         public Dictionary<Point, int> EffectBoxTimers;
 
         public Player(Texture2D texture, Vector2 position, Point size, float speed) : base(texture, position, size, speed)
@@ -58,7 +59,7 @@ namespace Client
             {
                 case Mode.Server:
                     Position = Position + Speed * input.Input * Server.TIME_BETWEEN_TICKS;
-                    Debug.WriteLine(Position);
+                    //Debug.WriteLine(Position);
                     return new StatePayload()
                     {
                         Tick = input.Tick,

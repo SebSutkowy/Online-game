@@ -62,6 +62,8 @@ namespace Client
             CameraFollow(id);
 
             CheckForInteraction(id);
+
+            CheckForAttacks(id);
         }
 
         private void CameraFollow(int id)
@@ -79,10 +81,7 @@ namespace Client
             // INTERACTION WITH CHESTS
             Player player = Players[id];
             Point mousePos = Tilemap.GetTilemapPos(Camera.AccountForOffset(InputManager.GetMousePos()));
-            Debug.WriteLine($"mouse pos: {mousePos}");
             Point playerPos = Tilemap.GetTilemapPos(player.Center);
-            Debug.WriteLine($"player pos: {playerPos}");
-            Debug.WriteLine("---");
             Tile tile = Dungeon.ActiveTilemap.GetInteractiveTile(mousePos);
 
             ShowInteractText = false;
@@ -105,7 +104,7 @@ namespace Client
 
             if (playerTile == null)
                 return;
-            Debug.WriteLine(playerTile.Type);
+            //Debug.WriteLine(playerTile.Type);
 
             if (playerTile.Type == TileType.Trap)
             {
@@ -118,6 +117,23 @@ namespace Client
                     Dungeon.ActiveTilemap.AddEffectBox(box);  
             }
 
+        }
+
+        private void CheckForAttacks(int playerId)
+        {
+            Point mousePos = InputManager.GetMousePos();
+            mousePos = Camera.AccountForOffset(mousePos);
+
+            string message;
+            foreach (Enemy enemy in Dungeon.Enemies.Values)
+            {
+                if (enemy.Hitbox.Contains(mousePos) && InputManager.ReceivedPressedInput(Input.Interact))
+                {
+                    message = Message.CreatePlayerAttackMessage(Players[playerId].Damage, enemy.Id);
+                    Client.SendMessage(message);
+                }
+
+            }
         }
 
         public void ResetPositions()
@@ -175,7 +191,7 @@ namespace Client
             Player player = Players[id];
             player.ChangeHealth(health);
 
-            if (Server.IsRunning)
+            if (NetworkManager.GetMode() == Mode.Server)
             {
                 string message = Message.CreatePlayerHealthChangeMessage(id, player.Health);
                 Server.SendGlobalMessage(message);

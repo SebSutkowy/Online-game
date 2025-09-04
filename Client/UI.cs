@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -24,8 +25,8 @@ namespace Client
 
         private static SpriteFont Font;
 
-        private static bool Interacting = false;
-        private static bool Attacking = false;
+        public static bool Interacting { get; private set; } = false;
+        public static bool Attacking { get; private set; } = false;
 
         private static List<string> MessagesToWrite = new List<string>();
         
@@ -52,6 +53,22 @@ namespace Client
             //CURSOR AND TEXT
             Point mousePos = InputManager.GetMousePos();
             MessagesToWrite.Add($"{mousePos}");
+            CheckIfInteracting(mousePos);
+
+            Attacking = false;
+            mousePos = Camera.AccountForOffset(mousePos);
+            foreach (Enemy enemy in Dungeon.Enemies.Values)
+            {
+                if (enemy.Hitbox.Contains(mousePos))
+                    Attacking = true;
+            }
+
+            UpdateCursor();
+        }
+
+        public static void CheckIfInteracting(Point mousePos)
+        {
+            Point newMousePos = new Point(mousePos.X, mousePos.Y);
             mousePos = Camera.AccountForOffset(mousePos);
             mousePos = Tilemap.GetTilemapPos(mousePos);
             MessagesToWrite.Add($"{mousePos}");
@@ -64,14 +81,12 @@ namespace Client
                 return;
             }
 
-
             if ((tile.Tags & TileTags.IsClickable) != 0)
                 Interacting = true;
             else
                 Interacting = false;
-
-            UpdateCursor();
         }
+
 
         public static void UpdateCursor()
         {
@@ -97,7 +112,6 @@ namespace Client
             {
                 lastPos = new Vector2(startingPosition.X, lastPos.Y);
                 lastPos = WriteMessage(message, lastPos + paddingVector);
-
             }
             return lastPos;
         }

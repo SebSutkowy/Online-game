@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Input;
 
 namespace Client;
@@ -22,8 +24,8 @@ enum MessageType : ushort
     TrapActivation = 10,
     EnteredBossRoom = 11,
     ChangeTilemap = 12,
-    UpdateBoss = 13,
-    UpdateTotem = 14
+    UpdateEnemy = 13,
+    PlayerAttacking = 14
 }
 
 enum TrapActivationStatus : ushort
@@ -52,6 +54,7 @@ static class Message
         string seed;
         TilemapChange Change;
         TilemapName tilemap;
+        EntityType entityType;
         switch (type)
         {
             case MessageType.Sync:
@@ -151,21 +154,38 @@ static class Message
             case MessageType.ChangeTilemap:
                 tilemap = (TilemapName)int.Parse(splitMessage[1]);
                 Client.PlayerManager.ResetPositions();
+                Client.Write($"Received tilemap change: {Dungeon.ActiveTilemapName} -> {tilemap}");
                 Dungeon.ChangeTilemap(tilemap);
                 break;
-            case MessageType.UpdateBoss:
-                X = float.Parse(splitMessage[1]);
-                Y = float.Parse(splitMessage[2]);
-                health = int.Parse(splitMessage[3]);
-                // update the boss
+            case MessageType.UpdateEnemy:
+                id = int.Parse(splitMessage[1]);
+                entityType = (EntityType)int.Parse(splitMessage[2]);
+                X = float.Parse(splitMessage[3]);
+                Y = float.Parse(splitMessage[4]);
+                health = int.Parse(splitMessage[5]);
+                int maxHealth = int.Parse(splitMessage[6]);
+                Client.Write($"Received {entityType.ToString()} Update message");
 
+                if (Dungeon.Enemies.ContainsKey(id))
+                {
+                    Dungeon.Enemies[id].Position = new Vector2(X, Y);
+                    Dungeon.Enemies[id].SetHealth(health);
+                    break;
+                }
+                Dungeon.Enemies[id] = entityType switch
+                {
+                    EntityType.Boss => new Boss1(Camera.EntityAssets[entityType], X, Y, Camera.EntityAssets[entityType].Width, Camera.EntityAssets[entityType].Height, 0, maxHealth),
+                    EntityType.Totem => new Totem(Camera.EntityAssets[entityType], X, Y, Camera.EntityAssets[entityType].Width, Camera.EntityAssets[entityType].Height, maxHealth)
+                };
                 break;
-            case MessageType.UpdateTotem:
-                X = float.Parse(splitMessage[1]);
-                Y = float.Parse(splitMessage[2]);
-                health = int.Parse(splitMessage[3]);
-                // update the totem
+            case MessageType.PlayerAttacking:
+                int damage = int.Parse(splitMessage[1]);
+                int enemyId = int.Parse(splitMessage[2]);
+                if (Dungeon.Enemies.ContainsKey(enemyId))
+                    Dungeon.Enemies[enemyId].TakeDamage(damage);
+                Server.Write($"Received Player Attack: -{damage}HP -> {Dungeon.Enemies[enemyId].Type}");
                 break;
+
         }
     }
 
@@ -194,7 +214,7 @@ static class Message
 
     public static string CreateChangeTilemapMessage(TilemapName tilemap) => $"{(ushort)MessageType.ChangeTilemap} {(int)tilemap}";
 
-    public static string CreateUpdateBossMessage(Vector2 position, int health, int maxHealth) => $"{(ushort)MessageType.UpdateBoss} {position.X} {position.Y} {health} {maxHealth}";
+    public static string CreateUpdateEnemyMessage(Enemy enemy) => $"{(ushort)MessageType.UpdateEnemy} {enemy.Id} {(int)enemy.Type} {enemy.X} {enemy.Y} {enemy.Health} {enemy.MaxHealth}";
 
-    public static string CreateUpdateTotemMessage(Vector2 position, int health, int maxHealth) => $"{(ushort)MessageType.UpdateTotem} {position.X} {position.Y} {health} {maxHealth}";
+    public static string CreatePlayerAttackMessage(int damage, int enemyId) => $"{(ushort)MessageType.PlayerAttacking} {damage} {enemyId}";
 }

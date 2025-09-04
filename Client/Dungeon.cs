@@ -22,6 +22,8 @@ namespace Client
         private static bool StartedBossFightSequence { get; set; } = false;
         private static Boss1 Boss { get; set; }
 
+        public static Dictionary<int, Enemy> Enemies = new Dictionary<int, Enemy>();
+
         public static void ImportTilemaps(List<TilemapName> tilemaps)
         {
             foreach (TilemapName tilemap in tilemaps)
@@ -92,6 +94,7 @@ namespace Client
                 }
                 if (InputManager.ReceivedPressedInput(Input.StartBossFight) && !StartedBossFightSequence)
                 {
+                    Server.PlayerManager.ResetPositions();
                     StartBossFight();
                     Debug.WriteLine("Boss prepared for phase 1");
                 }
@@ -99,7 +102,11 @@ namespace Client
             }
             if (StartedBossFightSequence && NetworkManager.GetMode() != Mode.Client)
                 BossFight();
-
+            foreach (Enemy enemy in Enemies.Values)
+            {
+                if (enemy.Type == EntityType.Boss)
+                    UI.AddMessage($"Boss: {enemy.Health}HP");
+            }
         }
 
         public static void StartBossFight()
@@ -111,7 +118,7 @@ namespace Client
             float X = bossTilemapPos.X * Tilemap.TILE_SIZE - BossTexture.Width / 2 + Tilemap.TILE_SIZE/2;
             float Y = bossTilemapPos.Y * Tilemap.TILE_SIZE - BossTexture.Height / 2 + Tilemap.TILE_SIZE / 2;
             Boss = new Boss1(BossTexture, X, Y, BossTexture.Width, BossTexture.Height, 0f, 500);
-            string message = Message.CreateUpdateBossMessage(Boss.Position, Boss.Health, Boss.MaxHealth);
+            string message = Message.CreateUpdateEnemyMessage(Boss);
             Server.SendGlobalMessage(message);
         }
 
@@ -120,10 +127,6 @@ namespace Client
             Boss.Update();
         }
 
-        public static void UpdateBoss()
-        {
-
-        }
 
         public static void Draw()
         {
@@ -131,6 +134,10 @@ namespace Client
             if (Boss != null)
             {
                 Boss.Draw();
+            }
+            foreach (Enemy enemy in Enemies.Values)
+            {
+                enemy.Draw();
             }
         }
     }

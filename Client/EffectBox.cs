@@ -59,12 +59,18 @@ namespace Client
             if (!player.EffectBoxTimers.ContainsKey(Position))
                 player.EffectBoxTimers.Add(Position, 0);
             if (IsColliding(player.Hitbox))
+            {
                 player.EffectBoxTimers[Position]++;
+                Debug.WriteLine("Player Colliding");
+            }
             else
                 player.EffectBoxTimers[Position] = 0;
 
             if (player.EffectBoxTimers[Position] >= EffectPeriod && player.EffectBoxTimers[Position] % EffectPeriod == 0)
+            {
                 Server.PlayerManager.ChangePlayerHealth(playerId, Effect);
+                Debug.WriteLine("Affecting Health");
+            }
         }
 
     }

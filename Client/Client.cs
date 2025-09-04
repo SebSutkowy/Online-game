@@ -49,7 +49,7 @@ namespace Client
 
             listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod, channel) =>
             {
-                Debug.WriteLine("Here");
+                //Debug.WriteLine("Here");
                 int maxMessageLength = 100; // In characters
                 string message = dataReader.GetString(maxMessageLength); // gets the message from the server
                 if (GetMostRecentMessage() != message)
