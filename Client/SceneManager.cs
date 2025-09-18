@@ -1,38 +1,186 @@
 ﻿
 
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Client
 {
-    public enum Scenes
+    public enum SceneName
     {
-        None,
-        SelectNetworkMode
+        SelectNetworkMode,
+        Game
     }
 
-    public static class SceneManager
+    public class UIFeature
     {
-        public static Scenes PreviousScene { get; private set; }
-        public static Scenes CurrentScene { get; private set; }
-        private static Dictionary<Scenes, Scene> Scenes = new Dictionary<Scenes, Scene>();
+        public Point Position { get; set; }
+        public Point Size { get; set; }
+        public Color Color { get; set; }
+        public int Width => Size.X;
+        public int Height => Size.Y;
 
-        public static void AddScene(Scenes sceneName, Scene scene)
+        public int Left => Position.X;
+        public int Top => Position.Y;
+        public int Right => Left + Width;
+        public int Bottom => Top + Height;
+
+
+        public Rectangle Rect => new Rectangle(Position, Size);
+        public bool IsColliding(Point point) => Rect.Contains(point);
+
+        //public bool IsColliding(Point point)
+        //{
+        //    Debug.WriteLine(point);
+        //    Debug.WriteLine(Rect);
+        //    Debug.WriteLine(Rect.Contains(point));
+        //    return Rect.Contains(point);
+        //}
+
+
+        public UIFeature(Point pos, Point size, Color color)
         {
-            Scenes.Add(sceneName, scene);
+            Position = pos;
+            Size = size;
+            Color = color;
         }
 
-        public static void SwitchScene(Scenes scene)
+        public void Draw()
         {
-            PreviousScene = CurrentScene;
-            CurrentScene = scene;
+            Camera.Draw(Rect, Color);
         }
-
-
-
     }
 
     public class Scene
     {
-        
+        public SceneName SceneName { get; set; }
+        public List<UIFeature> Features { get; set; }
+
+        public Scene(List<UIFeature> features)
+        {
+            Features = features;
+        }
+
+        public void AddUIFeature()
+        { }
+
+        public delegate void UpdateHandler();
+        public event UpdateHandler OnUpdate;
+        public void Update()
+        {
+            OnUpdate?.Invoke();
+        }
+
+        public delegate void DrawHandler();
+        public event DrawHandler OnDraw;
+        public void Draw()
+        {
+            OnDraw?.Invoke();
+            if (Features.Count <= 0)
+                return;
+            foreach (UIFeature feature in Features)
+            {
+                feature.Draw();
+            }
+        }
+    }
+
+    public static class SceneManager
+    {
+        public static Dictionary<SceneName, Scene> Scenes = new Dictionary<SceneName, Scene>();
+        public static SceneName currentScene;
+        public static Stack<SceneName> SceneStack = new Stack<SceneName>();
+
+        /* -- Giving Scenes Functions -- */
+        public static void Init()
+        {
+            currentScene = SceneName.SelectNetworkMode;
+            List<UIFeature> features;
+
+            /*
+             * 
+             * Dungeon.Update();
+             * NetworkManager.Update(gameTime);
+             * Dungeon.Draw();
+             * NetworkManager.Draw();
+             * UI.Draw();
+             */
+
+            /* --- selection screen --- */
+            Point posClient, posServer, size;
+            posClient = new Point(200, 450);
+            posServer = new Point(700, 450);
+            size = new Point(100, 50);
+            UIFeature clientButton = new UIFeature(posClient, size, Color.Blue);
+            UIFeature serverButton = new UIFeature(posServer, size, Color.Blue);
+            int indexC = 0, indexS = 1;
+
+            features = new List<UIFeature>()
+            {
+                clientButton,
+                serverButton
+            };
+
+            Scenes.Add(SceneName.SelectNetworkMode, new Scene(features));
+            Scenes[SceneName.SelectNetworkMode].OnUpdate += () =>
+            {
+                if (Scenes[SceneName.SelectNetworkMode].Features[indexC].IsColliding(InputManager.GetMousePos())) // Client
+                {
+                    if (InputManager.ReceivedPressedInput(Input.Interact))
+                    {
+                        NetworkManager.ChangeNetworkMode(Mode.Client);
+                        SwitchScene(SceneName.Game);
+                    }
+                    else
+                        Scenes[SceneName.SelectNetworkMode].Features[indexC].Color = Color.Red;
+                }
+                else
+                    Scenes[SceneName.SelectNetworkMode].Features[indexC].Color = Color.Blue;
+
+                if (Scenes[SceneName.SelectNetworkMode].Features[indexS].IsColliding(InputManager.GetMousePos()) // Server
+                {
+                    if (InputManager.ReceivedHeldInput(Input.Interact))
+                    {
+                        NetworkManager.ChangeNetworkMode(Mode.Server);
+                        SwitchScene(SceneName.Game);
+                    }
+                    else
+                        Scenes[SceneName.SelectNetworkMode].Features[indexS].Color = Color.Red;
+                }
+                else
+                    Scenes[SceneName.SelectNetworkMode].Features[indexS].Color = Color.Blue;
+            };
+
+            Scenes[SceneName.SelectNetworkMode].OnDraw += () =>
+            {
+
+            };
+        }
+
+        public static Scene activeScene => Scenes[currentScene];
+
+        public static void SwitchScene(SceneName scene)
+        {
+            SceneStack.Push(currentScene);
+            currentScene = scene;
+        }
+
+        public static void GoBackScene()
+        {
+            if (SceneStack.Count <= 0) return;
+            currentScene = SceneStack.Pop();
+        }
+
+        public static void Update()
+        {
+            activeScene.Update();
+        }
+
+        public static void Draw()
+        {
+            activeScene.Draw();
+        }
+
     }
 }

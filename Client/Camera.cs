@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Client
 {
@@ -21,6 +22,7 @@ namespace Client
 
         private static SpriteBatch spriteBatch;
         private static SpriteFont spriteFont;
+        private static Texture2D texture;
 
         public static Dictionary<TileType, Texture2D> TilemapAssets { get; private set; } = new Dictionary<TileType, Texture2D>();
         public static Dictionary<EntityType, Texture2D> EntityAssets { get; private set; } = new Dictionary<EntityType, Texture2D>();
@@ -108,6 +110,11 @@ namespace Client
             newBounds.Width = (int)(translationFactor * bounds.Width);
             newBounds.Height = (int)(translationFactor * bounds.Height);
             spriteBatch.Draw(texture, newBounds, color);
+        }
+
+        public static void Draw(Rectangle bounds, Color color)
+        {
+            Draw(texture, bounds, color);
         }
 
         public static void DrawString(SpriteFont font, string text, Vector2 position, Color color)

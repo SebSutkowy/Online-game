@@ -81,9 +81,7 @@ public class Game1 : Game
         // TODO: Add your update logic here
         InputManager.Update();
 
-        Dungeon.Update();
-        NetworkManager.Update(gameTime);
-        UI.Update();
+        SceneManager.Update();
 
         base.Update(gameTime);
     }
@@ -95,11 +93,7 @@ public class Game1 : Game
         // TODO: Add your drawing code 
         Camera.ToDraw += () =>
         {
-            Dungeon.Draw();
-
-            NetworkManager.Draw();
-
-            UI.Draw();
+            SceneManager.Draw();
         };
 
         Camera.Display(_spriteBatch);
