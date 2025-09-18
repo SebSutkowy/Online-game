@@ -144,7 +144,7 @@ namespace Client
 
                 if (Scenes[SceneName.SelectNetworkMode].Features[indexS].IsColliding(InputManager.GetMousePos())) // Server
                 {
-                    if (InputManager.ReceivedHeldInput(Input.Interact))
+                    if (InputManager.ReceivedPressedInput(Input.Interact))
                     {
                         NetworkManager.ChangeNetworkMode(Mode.Server);
                         SwitchScene(SceneName.Game);
@@ -169,15 +169,16 @@ namespace Client
             Scenes.Add(SceneName.Game, new Scene());
             Scenes[SceneName.Game].OnUpdate += () =>
             {
-                Debug.WriteLine("Here1");
                 Dungeon.Update();
                 NetworkManager.Update(_gameTime);
                 UI.Update();
+
+                if (InputManager.ReceivedPressedInput(Input.GoBack))
+                    GoBackScene();
             };
 
             Scenes[SceneName.Game].OnDraw += () =>
             {
-                Debug.WriteLine("Here2");
                 Dungeon.Draw();
                 NetworkManager.Draw();
                 UI.Draw();
@@ -188,7 +189,6 @@ namespace Client
 
         public static void SwitchScene(SceneName scene)
         {
-            Debug.WriteLine("Here3");
             SceneStack.Push(currentScene);
             currentScene = scene;
         }

@@ -21,7 +21,8 @@ namespace Client
         SwitchToHybrid,
         DisplayConsole,
         Interact,
-        StartBossFight
+        StartBossFight,
+        GoBack
     }
 
     public enum InputType
@@ -88,7 +89,8 @@ namespace Client
             { Input.SwitchToHybrid, new InputBinding(Keys.H) },
             { Input.DisplayConsole, new InputBinding(Keys.OemTilde) },
             { Input.Interact, new InputBinding(MouseButton.Left) },
-            { Input.StartBossFight, new InputBinding(Keys.Space) }
+            { Input.StartBossFight, new InputBinding(Keys.Space) },
+            { Input.GoBack, new InputBinding(Keys.Escape) }
         };
         private static Dictionary<Input, InputPair> InputValues = new Dictionary<Input, InputPair>();
 
