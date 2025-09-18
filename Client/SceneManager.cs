@@ -62,6 +62,11 @@ namespace Client
             Features = features;
         }
 
+        public Scene()
+        {
+            Features = new List<UIFeature>();
+        }
+
         public void AddUIFeature()
         { }
 
@@ -76,8 +81,6 @@ namespace Client
         public event DrawHandler OnDraw;
         public void Draw()
         {
-            if (Features.Count <= 0)
-                return;
             foreach (UIFeature feature in Features)
             {
                 feature.Draw();
@@ -91,6 +94,7 @@ namespace Client
         public static Dictionary<SceneName, Scene> Scenes = new Dictionary<SceneName, Scene>();
         public static SceneName currentScene;
         public static Stack<SceneName> SceneStack = new Stack<SceneName>();
+        private static GameTime _gameTime;
 
         /* -- Giving Scenes Functions -- */
         public static void Init()
@@ -106,7 +110,7 @@ namespace Client
              * UI.Draw();
              */
 
-            /* --- selection screen --- */
+            /* --- selection scene --- */
             Point posClient, posServer, size;
             posClient = new Point(200, 450);
             posServer = new Point(700, 450);
@@ -159,12 +163,32 @@ namespace Client
 
                 UI.Draw();
             };
+
+
+            /* --- Game scene --- */
+            Scenes.Add(SceneName.Game, new Scene());
+            Scenes[SceneName.Game].OnUpdate += () =>
+            {
+                Debug.WriteLine("Here1");
+                Dungeon.Update();
+                NetworkManager.Update(_gameTime);
+                UI.Update();
+            };
+
+            Scenes[SceneName.Game].OnDraw += () =>
+            {
+                Debug.WriteLine("Here2");
+                Dungeon.Draw();
+                NetworkManager.Draw();
+                UI.Draw();
+            };
         }
 
         public static Scene activeScene => Scenes[currentScene];
 
         public static void SwitchScene(SceneName scene)
         {
+            Debug.WriteLine("Here3");
             SceneStack.Push(currentScene);
             currentScene = scene;
         }
@@ -175,8 +199,9 @@ namespace Client
             currentScene = SceneStack.Pop();
         }
 
-        public static void Update()
+        public static void Update(GameTime gameTime)
         {
+            _gameTime = gameTime;
             activeScene.Update();
         }
 

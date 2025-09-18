@@ -26,6 +26,8 @@ public class Game1 : Game
 
     private SpriteFont _font;
 
+    private GameTime _gameTime;
+
     public Game1()
     {
         _graphics = new GraphicsDeviceManager(this);
@@ -82,7 +84,7 @@ public class Game1 : Game
         // TODO: Add your update logic here
         InputManager.Update();
 
-        SceneManager.Update();
+        SceneManager.Update(gameTime);
 
         base.Update(gameTime);
     }
