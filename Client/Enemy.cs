@@ -240,6 +240,7 @@ namespace Client
             }
             
             startedPhase[PhaseNumber - 1] = true;
+            AttackChargeUp = 0;
             DeleteTotems();
             InvulnerabilityTotems.Clear();
             Texture2D texture = Camera.EntityAssets[EntityType.Totem];
