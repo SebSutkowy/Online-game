@@ -56,7 +56,7 @@ public class Game1 : Game
             TilemapName.PlayerSpawn,
             TilemapName.BossRoom
         };
-        Camera.ImportTextures(Content);
+        Camera.ImportTextures(GraphicsDevice, Content);
         Dungeon.ImportTilemaps(tilemapnames);
 
         UI.ImportTextures(Content);
@@ -74,6 +74,7 @@ public class Game1 : Game
 
         Console.Initialize(_font);
         Camera.AddFont(_font);
+        SceneManager.Init();
     }
 
     protected override void Update(GameTime gameTime)

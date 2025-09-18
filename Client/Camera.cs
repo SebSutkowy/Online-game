@@ -27,8 +27,10 @@ namespace Client
         public static Dictionary<TileType, Texture2D> TilemapAssets { get; private set; } = new Dictionary<TileType, Texture2D>();
         public static Dictionary<EntityType, Texture2D> EntityAssets { get; private set; } = new Dictionary<EntityType, Texture2D>();
 
-        public static void ImportTextures(ContentManager Content)
+        public static void ImportTextures(GraphicsDevice graphics, ContentManager Content)
         {
+            texture = new Texture2D(graphics, 1, 1);
+            texture.SetData(new[] { Color.White });
             ImportTilemapTextures(Content);
             ImportEntityTextures(Content);
         }

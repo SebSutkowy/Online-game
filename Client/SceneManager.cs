@@ -76,13 +76,13 @@ namespace Client
         public event DrawHandler OnDraw;
         public void Draw()
         {
-            OnDraw?.Invoke();
             if (Features.Count <= 0)
                 return;
             foreach (UIFeature feature in Features)
             {
                 feature.Draw();
             }
+            OnDraw?.Invoke();
         }
     }
 
@@ -99,7 +99,6 @@ namespace Client
             List<UIFeature> features;
 
             /*
-             * 
              * Dungeon.Update();
              * NetworkManager.Update(gameTime);
              * Dungeon.Draw();
@@ -125,6 +124,7 @@ namespace Client
             Scenes.Add(SceneName.SelectNetworkMode, new Scene(features));
             Scenes[SceneName.SelectNetworkMode].OnUpdate += () =>
             {
+                UI.UpdateCursor();
                 if (Scenes[SceneName.SelectNetworkMode].Features[indexC].IsColliding(InputManager.GetMousePos())) // Client
                 {
                     if (InputManager.ReceivedPressedInput(Input.Interact))
@@ -138,7 +138,7 @@ namespace Client
                 else
                     Scenes[SceneName.SelectNetworkMode].Features[indexC].Color = Color.Blue;
 
-                if (Scenes[SceneName.SelectNetworkMode].Features[indexS].IsColliding(InputManager.GetMousePos()) // Server
+                if (Scenes[SceneName.SelectNetworkMode].Features[indexS].IsColliding(InputManager.GetMousePos())) // Server
                 {
                     if (InputManager.ReceivedHeldInput(Input.Interact))
                     {
@@ -154,7 +154,10 @@ namespace Client
 
             Scenes[SceneName.SelectNetworkMode].OnDraw += () =>
             {
+                Camera.DrawString("Client mode", posClient, Color.White);
+                Camera.DrawString("Server mode", posServer, Color.White);
 
+                UI.Draw();
             };
         }
 
