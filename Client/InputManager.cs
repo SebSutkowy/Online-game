@@ -22,7 +22,8 @@ namespace Client
         DisplayConsole,
         Interact,
         StartBossFight,
-        GoBack
+        GoBack,
+        ShowPlayerList
     }
 
     public enum InputType
@@ -90,7 +91,8 @@ namespace Client
             { Input.DisplayConsole, new InputBinding(Keys.OemTilde) },
             { Input.Interact, new InputBinding(MouseButton.Left) },
             { Input.StartBossFight, new InputBinding(Keys.Space) },
-            { Input.GoBack, new InputBinding(Keys.Escape) }
+            { Input.GoBack, new InputBinding(Keys.Escape) },
+            { Input.ShowPlayerList, new InputBinding(Keys.Tab) }
         };
         private static Dictionary<Input, InputPair> InputValues = new Dictionary<Input, InputPair>();
 

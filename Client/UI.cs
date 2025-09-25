@@ -29,7 +29,6 @@ namespace Client
         public static bool Attacking { get; private set; } = false;
 
         private static List<string> MessagesToWrite = new List<string>();
-        
 
 
         public static void ImportTextures(ContentManager Content)
@@ -121,12 +120,53 @@ namespace Client
             MessagesToWrite.Add(message);
         }
 
+        public static Color DecideColor(int health)
+        {
+            if (health > 50)
+                return Color.White;
+            else if (health > 20)
+                return Color.Yellow;
+            else
+                return Color.Red;
+        }
+
         public static void Draw()
         {
-            //TEXT
+            // TEXT
             WriteMultipleMesssages(MessagesToWrite, new Vector2(Camera.WIDTH - 110, 0));
 
-            //CURSOR
+            // PLAYER LIST
+            if (InputManager.ReceivedHeldInput(Input.ShowPlayerList))
+            {
+                if (NetworkManager.GetMode() != Mode.None)
+                {
+                    List<string> data = NetworkManager.PlayerManager.GetPlayerList();
+                    if (data.Count > 0)
+                    {
+                        Rectangle bounds = new Rectangle()
+                        {
+                            X = 100,
+                            Y = 100,
+                            Width = 800,
+                            Height = data.Count * 100
+                        };
+                        Camera.DrawUI(bounds, new Color(25, 25, 25, 200));
+                    }
+                    Point pos;
+                    for(int i = 0; i < data.Count; i++)
+                    {
+                        string[] s = data[i].Split();
+                        Color c = DecideColor(int.Parse(s[1]));
+                        pos = new Point(210, i * 100 + 110);
+                        Camera.DrawString(s[0], pos, c);
+                        pos = new Point(790, i * 100 + 110);
+                        Camera.DrawString(s[1], pos, c);
+                    }
+
+                }
+            }
+
+            // CURSOR
             if (!CursorTextures.ContainsKey(CursorType))
                 return;
             Texture2D mouseTexture = CursorTextures[CursorType];

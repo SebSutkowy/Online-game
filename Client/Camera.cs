@@ -22,15 +22,15 @@ namespace Client
 
         private static SpriteBatch spriteBatch;
         private static SpriteFont spriteFont;
-        private static Texture2D texture;
+        private static Texture2D _texture;
 
         public static Dictionary<TileType, Texture2D> TilemapAssets { get; private set; } = new Dictionary<TileType, Texture2D>();
         public static Dictionary<EntityType, Texture2D> EntityAssets { get; private set; } = new Dictionary<EntityType, Texture2D>();
 
         public static void ImportTextures(GraphicsDevice graphics, ContentManager Content)
         {
-            texture = new Texture2D(graphics, 1, 1);
-            texture.SetData(new[] { Color.White });
+            _texture = new Texture2D(graphics, 1, 1);
+            _texture.SetData(new[] { Color.White });
             ImportTilemapTextures(Content);
             ImportEntityTextures(Content);
         }
@@ -116,7 +116,7 @@ namespace Client
 
         public static void Draw(Rectangle bounds, Color color)
         {
-            Draw(texture, bounds, color);
+            Draw(_texture, bounds, color);
         }
 
         public static void DrawString(SpriteFont font, string text, Vector2 position, Color color)
@@ -132,6 +132,10 @@ namespace Client
         public static void DrawUI(Texture2D texture, Rectangle rect, Color color)
         {
             spriteBatch.Draw(texture, rect, color);
+        }
+        public static void DrawUI(Rectangle rect, Color color)
+        {
+            spriteBatch.Draw(_texture, rect, color);
         }
 
         public static void DrawString(string text, Point position, Color color)

@@ -1,11 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Security.Cryptography.X509Certificates;
-using System.Threading;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Content;
-using Microsoft.Xna.Framework.Input;
 
 namespace Client;
 
@@ -36,7 +30,6 @@ enum TrapActivationStatus : ushort
 
 static class Message
 {
-
     public static void Decode(PlayerManager playerManager, string message)
     {
         string[] splitMessage = message.Split(' ');
@@ -55,23 +48,27 @@ static class Message
         TilemapChange Change;
         TilemapName tilemap;
         EntityType entityType;
+        
         switch (type)
         {
             case MessageType.Sync:
                 Client.SetTick(int.Parse(splitMessage[1]));
                 Client.Write($"Received tick update to {int.Parse(splitMessage[1])}");
                 break;
+
             case MessageType.ClientJoin:
                 id = int.Parse(splitMessage[1]);
                 tick = int.Parse(splitMessage[2]);
                 Client.OnClientJoin(id, tick);
                 Client.Write($"Player {id} Joined");
                 break;
+            
             case MessageType.ClientDisconnect:
                 id = int.Parse(splitMessage[1]);
                 Client.OnClientDisconnect(id);
                 Client.Write($"Player {id} Disconnected");
                 break;
+            
             case MessageType.SpawnPlayer:
             case MessageType.PlayerState:
                 id = int.Parse(splitMessage[1]);
@@ -86,11 +83,13 @@ static class Message
                 playerManager.SetPlayerState(id, state);
                 Client.Write($"Received player state: {{Tick: {tick} X: {X} Y: {Y}}}");
                 break;
+            
             case MessageType.PlayerSpawnRequest:
                 id = int.Parse(splitMessage[1]);
                 playerManager.CreatePlayer(id);
                 Server.Write($"Received player spawn request for client {id}");
                 break;
+            
             case MessageType.PlayerInput:
                 id = int.Parse(splitMessage[1]);
                 tick = int.Parse(splitMessage[2]);
@@ -104,6 +103,7 @@ static class Message
                 Server.Write($"Received an input of {tick} {X} {Y} from client {id}");
                 playerManager.AddInput(id, input);
                 break;
+            
             case MessageType.Interaction:
                 id = int.Parse(splitMessage[1]);
                 tick = int.Parse(splitMessage[2]);
@@ -118,6 +118,7 @@ static class Message
                 Dungeon.AddChanges(tilemap, Change, Mode.Server);
                 Server.Write($"Received Interaction message position: {tilemapPos} in {tilemap}");
                 break;
+            
             case MessageType.InteractionConfirmation:
                 tick = int.Parse(splitMessage[1]);
                 tilemap = (TilemapName)int.Parse(splitMessage[2]);
@@ -132,12 +133,14 @@ static class Message
                 Dungeon.AddChanges(tilemap, Change, Mode.Client);
                 Client.Write($"Received Interaction confirmation position: {tilemapPos}");
                 break;
+            
             case MessageType.PlayerHealthChange:
                 id = int.Parse(splitMessage[1]);
                 int newHealth = int.Parse(splitMessage[2]);
                 Client.PlayerManager.SetPlayerHealth(id, newHealth);
                 Client.Write($"Received new health message: {newHealth}");
                 break;
+            
             case MessageType.TrapActivation:
                 tilemap = (TilemapName)int.Parse(splitMessage[1]);
                 tilemapPos.X = int.Parse(splitMessage[2]);
@@ -149,14 +152,17 @@ static class Message
                     Dungeon.AddTile(tilemap, tilemapPos, TileType.ActiveTrap);
                 Client.Write($"Received new Trap toggle message: {tilemapPos}");
                 break;
+            
             case MessageType.EnteredBossRoom:
                 break;
+            
             case MessageType.ChangeTilemap:
                 tilemap = (TilemapName)int.Parse(splitMessage[1]);
                 Client.PlayerManager.ResetPositions();
                 Client.Write($"Received tilemap change: {Dungeon.ActiveTilemapName} -> {tilemap}");
                 Dungeon.ChangeTilemap(tilemap);
                 break;
+            
             case MessageType.UpdateEnemy:
                 id = int.Parse(splitMessage[1]);
                 entityType = (EntityType)int.Parse(splitMessage[2]);
@@ -178,6 +184,7 @@ static class Message
                     EntityType.Totem => new Totem(Camera.EntityAssets[entityType], X, Y, Camera.EntityAssets[entityType].Width, Camera.EntityAssets[entityType].Height, maxHealth)
                 };
                 break;
+            
             case MessageType.PlayerAttacking:
                 int damage = int.Parse(splitMessage[1]);
                 int enemyId = int.Parse(splitMessage[2]);

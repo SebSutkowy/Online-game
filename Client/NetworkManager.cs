@@ -18,6 +18,13 @@ namespace Client
 
         public static Mode GetMode() => Mode;
 
+        public static PlayerManager PlayerManager => Mode switch
+        {
+            Mode.Client => Client.PlayerManager,
+            Mode.Server => Server.PlayerManager,
+            _ => null
+        };
+
         public static void ToggleConsole()
         {
             DisplayConsole = !DisplayConsole;

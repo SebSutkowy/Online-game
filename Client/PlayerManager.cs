@@ -27,6 +27,18 @@ namespace Client
             BlankTexture = texture;
         }
 
+        public List<string> GetPlayerList()
+        {
+            List<string> data = new List<string>();
+            Player player;
+            foreach (int playerId in Players.Keys)
+            {
+                player = Players[playerId];
+                data.Add($"{playerId} {player.Health}");
+            }
+            return data;
+        }
+
         public void RemoveEffectBox(Point key)
         {
             foreach (Player player in Players.Values)
