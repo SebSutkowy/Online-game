@@ -108,6 +108,7 @@ namespace Client
             }
             Dungeon.UpdateTilemap();
             MoveCamera();
+            ParticleManager.Update();
         }
 
         public static void Write(string message)

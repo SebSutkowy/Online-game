@@ -60,6 +60,7 @@ public class Game1 : Game
         };
         Camera.ImportTextures(GraphicsDevice, Content);
         Dungeon.ImportTilemaps(tilemapnames);
+        ParticleManager.LoadContent(GraphicsDevice);
 
         UI.ImportTextures(Content);
 

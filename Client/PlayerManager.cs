@@ -230,6 +230,15 @@ namespace Client
             CheckIfPlayerExists(id);
 
             Player player = Players[id];
+            Point minSize = new Point(5, 5);
+            Point maxSize = new Point(25, 25);
+            Vector2 minVel = new Vector2(-1, -1);
+            Vector2 maxVel = new Vector2(1, 1);
+            Color minCol = new Color(20, 20, 20);
+            Color maxCol = new Color(50, 50, 50);
+            int lifespan =(int)( 0.5f * Client.TICK_RATE);
+
+            ParticleManager.CreateRandomParticles(player.Position, minSize, maxSize, minVel, maxVel, minCol, maxCol, lifespan);
             player.Position = state.Position;
         }
 

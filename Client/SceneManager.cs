@@ -181,6 +181,7 @@ namespace Client
             {
                 Dungeon.Draw();
                 NetworkManager.Draw();
+                ParticleManager.Draw();
                 UI.Draw();
             };
         }

@@ -71,6 +71,7 @@ namespace Client
                 //    GetStates();
                 PlayerManager.Update();
                 Dungeon.ActiveTilemap.Update();
+                ParticleManager.Update();
             }
         }
 
